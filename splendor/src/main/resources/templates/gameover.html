@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Splendor — Game Over</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="gameover-container">
+    <h1>Game Over!</h1>
+    <h2>Winner: <span th:text="${winner.name}">Player</span></h2>
+
+    <table class="score-table">
+        <thead>
+            <tr>
+                <th>Player</th>
+                <th>Score</th>
+                <th>Cards Bought</th>
+                <th>Coins Held</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${game.players}"
+                th:class="${p.name == winner.name} ? 'winner-row' : ''">
+                <td th:text="${p.name}">Player</td>
+                <td th:text="${p.score}">0</td>
+                <td th:text="${p.cards.size()}">0</td>
+                <td th:text="${p.getTotalCoins()}">0</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <form th:action="@{/gameover/restart}" method="post">
+        <button type="submit" class="btn-primary">Play Again</button>
+    </form>
+</div>
+</body>
+</html>
