@@ -11,14 +11,6 @@
 <div class="message-banner" th:if="${game.message != null and !game.message.isEmpty()}"
      th:text="${game.message}"></div>
 
-<<<<<<< HEAD
-<!-- Final Round Warning -->
-<div class="message-banner" style="background:#b8860b" th:if="${game.finalRound}">
-    Final round! Finishing so all players get equal turns...
-</div>
-
-=======
->>>>>>> remotes/origin/init
 <div class="game-layout">
 
     <!-- ===== LEFT: Board ===== -->
@@ -28,12 +20,6 @@
         <div class="turn-indicator">
             <span>Current Turn: </span>
             <strong th:text="${game.currentPlayer.name}">Player</strong>
-<<<<<<< HEAD
-            <span style="float:right; color:#c0a07a;">
-                Target: <strong th:text="${game.winScore}">15</strong> prestige
-            </span>
-=======
->>>>>>> remotes/origin/init
         </div>
 
         <!-- Noble Tiles -->
@@ -151,14 +137,7 @@
         <div th:each="p, pStat : ${game.players}"
              th:class="${pStat.index == game.nowTurn} ? 'player-panel active-player' : 'player-panel'">
 
-<<<<<<< HEAD
-            <h3>
-                <span th:text="${p.name}">Player</span>
-                <span th:if="${p.ai}" style="font-size:0.75rem; color:#c0a07a;"> (CPU)</span>
-            </h3>
-=======
             <h3 th:text="${p.name}">Player</h3>
->>>>>>> remotes/origin/init
             <div class="player-score">Score: <strong th:text="${p.score}">0</strong></div>
 
             <!-- Coins held -->

@@ -8,64 +8,6 @@
 <body>
 <div class="login-container">
     <h1>Splendor</h1>
-<<<<<<< HEAD
-    <h2>Game Setup</h2>
-    <form th:action="@{/start}" th:object="${login}" method="post">
-        <!-- Number of players -->
-        <div class="form-group">
-            <label for="numPlayers">Number of Players</label>
-            <select id="numPlayers" th:field="*{numPlayers}" onchange="togglePlayerFields()">
-                <option value="2">2 Players</option>
-                <option value="3">3 Players</option>
-                <option value="4">4 Players</option>
-            </select>
-        </div>
-
-        <!-- Player 1 (always human) -->
-        <div class="form-group">
-            <label for="play1">Player 1 (You)</label>
-            <input type="text" id="play1" th:field="*{play1}" placeholder="Player 1" maxlength="20">
-        </div>
-
-        <!-- Player 2 -->
-        <div class="form-group" id="p2group">
-            <label for="play2">Player 2</label>
-            <div class="player-row">
-                <input type="text" id="play2" th:field="*{play2}" placeholder="Player 2" maxlength="20">
-                <label class="ai-label"><input type="checkbox" name="aiPlayers" value="ai2"> CPU</label>
-            </div>
-        </div>
-
-        <!-- Player 3 -->
-        <div class="form-group" id="p3group" style="display:none">
-            <label for="play3">Player 3</label>
-            <div class="player-row">
-                <input type="text" id="play3" th:field="*{play3}" placeholder="Player 3" maxlength="20">
-                <label class="ai-label"><input type="checkbox" name="aiPlayers" value="ai3"> CPU</label>
-            </div>
-        </div>
-
-        <!-- Player 4 -->
-        <div class="form-group" id="p4group" style="display:none">
-            <label for="play4">Player 4</label>
-            <div class="player-row">
-                <input type="text" id="play4" th:field="*{play4}" placeholder="Player 4" maxlength="20">
-                <label class="ai-label"><input type="checkbox" name="aiPlayers" value="ai4"> CPU</label>
-            </div>
-        </div>
-
-        <button type="submit" class="btn-primary">Start Game</button>
-    </form>
-</div>
-
-<script>
-function togglePlayerFields() {
-    var n = parseInt(document.getElementById('numPlayers').value);
-    document.getElementById('p3group').style.display = n >= 3 ? 'block' : 'none';
-    document.getElementById('p4group').style.display = n >= 4 ? 'block' : 'none';
-}
-</script>
-=======
     <h2>Enter Player Names</h2>
     <form th:action="@{/start}" th:object="${login}" method="post">
         <div class="form-group">
@@ -79,6 +21,5 @@ function togglePlayerFields() {
         <button type="submit" class="btn-primary">Start Game</button>
     </form>
 </div>
->>>>>>> remotes/origin/init
 </body>
 </html>
