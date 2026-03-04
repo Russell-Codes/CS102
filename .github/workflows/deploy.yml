@@ -1,64 +1,80 @@
 name: Deploy Spring Boot to AWS
 
 on:
-  push:
-    branches:
-      - main
+    push:
+        branches:
+            - main
 
 # REQUIRED: These permissions allow GitHub to request the OIDC token from AWS
 permissions:
-  id-token: write
-  contents: read
+    id-token: write
+    contents: read
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
+    build-and-deploy:
+        runs-on: ubuntu-latest
 
-    steps:
-      # 1. Check out the repository code
-      - name: Checkout Code
-        uses: actions/checkout@v4
+        steps:
+            # 1. Check out the repository code
+            - name: Checkout Code
+              uses: actions/checkout@v4
 
-      # 2. Set up Java 25
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'corretto'
-          cache: maven
+            # 2. Set up Java 25
+            - name: Set up JDK 25
+              uses: actions/setup-java@v4
+              with:
+                  java-version: "25"
+                  distribution: "corretto"
+                  cache: maven
 
-      # 3. Build the application with Maven
-      - name: Build with Maven
-        run: ./mvnw clean package -DskipTests
+            # 3. Build the application with Maven
+            - name: Build with Maven
+              run: ./mvnw clean package -DskipTests
 
-      # 4. Generate a unique deployment package name
-      - name: Generate Deployment Package Name
-        id: generate-name
-        run: echo "deploy_package=splendor-app-${{ github.sha }}.jar" >> $GITHUB_ENV
+            # 4. Generate a unique deployment package name
+            - name: Generate Deployment Package Name
+              id: generate-name
+              run: echo "deploy_package=splendor-app-${{ github.sha }}.jar" >> $GITHUB_ENV
 
-      # 5. Rename the built JAR file
-      - name: Prepare Deployment Artifact
-        run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
+            # 5. Rename the built JAR file
+            - name: Prepare Deployment Artifact
+              run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
 
-      # 6. Authenticate with AWS using your Role (No Access Keys!)
-      - name: Configure AWS Credentials
-        id: aws_creds # Added ID to reference the outputs
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ${{ secrets.AWS_REGION }}
-          output-credentials: true # Crucial: exposes the temporary keys to the next step
+            # 6. Authenticate with AWS using your Role (No Access Keys!)
+            - name: Configure AWS Credentials
+              id: aws_creds # Added ID to reference the outputs
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+                  output-credentials: true # Crucial: exposes the temporary keys to the next step
 
-      # 7. Deploy to Elastic Beanstalk
-      - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@v22
-        with:
-          # Pass the temporary credentials explicitly here
-          aws_access_key: ${{ steps.aws_creds.outputs.aws-access-key-id }}
-          aws_secret_key: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
-          aws_session_token: ${{ steps.aws_creds.outputs.aws-session-token }}
-          application_name: splendor-app # Must exactly match AWS Beanstalk App Name
-          environment_name: splendor-app-env # Must exactly match AWS Beanstalk Env Name
-          version_label: ${{ github.sha }}
-          region: ${{ secrets.AWS_REGION }}
-          deployment_package: ${{ env.deploy_package }}
+            # 7. Deploy to Elastic Beanstalk
+            - name: Deploy to Elastic Beanstalk
+              uses: einaregilsson/beanstalk-deploy@v22
+              with:
+                  # Pass the temporary credentials explicitly here
+                  aws_access_key: ${{ steps.aws_creds.outputs.aws-access-key-id }}
+                  aws_secret_key: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
+                  aws_session_token: ${{ steps.aws_creds.outputs.aws-session-token }}
+                  application_name: splendor-app # Must exactly match AWS Beanstalk App Name
+                  environment_name: splendor-app-env # Must exactly match AWS Beanstalk Env Name
+                  version_label: ${{ github.sha }}
+                  region: ${{ secrets.AWS_REGION }}
+                  deployment_package: ${{ env.deploy_package }}
+            - name: Fetch and Print Deployed URL
+              env:
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  AWS_DEFAULT_REGION: "ap-southeast-1"
+              run: |
+                  # Fetch the CNAME (URL) of the environment using the AWS CLI
+                  APP_URL=$(aws elasticbeanstalk describe-environments \
+                      --environment-names "your-env-name" \
+                      --query "Environments[0].CNAME" \
+                      --output text)
+
+                  echo "==================================================="
+                  echo "🚀 Deployment Successful! "
+                  echo "🌍 Your application is live at: http://$APP_URL"
+                  echo "==================================================="
