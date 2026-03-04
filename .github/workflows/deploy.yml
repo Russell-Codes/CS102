@@ -41,15 +41,16 @@ jobs:
               run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
 
             # 6. Authenticate with AWS using your Role (No Access Keys!)
+            # This step MUST come before any custom AWS CLI commands
             - name: Configure AWS Credentials
               id: aws_creds
               uses: aws-actions/configure-aws-credentials@v4
               with:
                   role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                   aws-region: ${{ secrets.AWS_REGION }}
-                  output-credentials: true
+                  output-credentials: true # Crucial: exposes the temporary keys to the next steps
 
-            # 7. Print the URLs to the GitHub Actions Summary
+            # 7. Print the URLs to both the Terminal Log AND the GitHub Summary Dashboard
             - name: Generate Deployment Summary URLs
               run: |
                   RAW_URL=$(aws elasticbeanstalk describe-environments \
@@ -58,6 +59,13 @@ jobs:
                       --query "Environments[0].CNAME" \
                       --output text)
 
+                  # --- 1. Print directly to the terminal log (Visible in the black screen) ---
+                  echo "================================================================"
+                  echo "🌐 Secure Custom Domain: https://splendor-app.me"
+                  echo "🔗 Internal AWS URL:     http://$RAW_URL"
+                  echo "================================================================"
+
+                  # --- 2. Send to the Markdown Dashboard (Visible on the Summary tab) ---
                   echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
                   echo "- **Secure Custom Domain:** [https://splendor-app.me](https://splendor-app.me)" >> $GITHUB_STEP_SUMMARY
                   echo "- **Internal AWS URL (Direct):** [http://$RAW_URL](http://$RAW_URL)" >> $GITHUB_STEP_SUMMARY
@@ -66,11 +74,12 @@ jobs:
             - name: Deploy to Elastic Beanstalk
               uses: einaregilsson/beanstalk-deploy@v22
               with:
+                  # Pass the temporary credentials explicitly here
                   aws_access_key: ${{ steps.aws_creds.outputs.aws-access-key-id }}
                   aws_secret_key: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
                   aws_session_token: ${{ steps.aws_creds.outputs.aws-session-token }}
-                  application_name: splendor-app
-                  environment_name: splendor-app-env
+                  application_name: splendor-app # Must exactly match AWS Beanstalk App Name
+                  environment_name: splendor-app-env # Must exactly match AWS Beanstalk Env Name
                   version_label: ${{ github.sha }}
                   region: ${{ secrets.AWS_REGION }}
                   deployment_package: ${{ env.deploy_package }}
