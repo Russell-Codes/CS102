@@ -1,0 +1,58 @@
+name: Deploy Spring Boot to AWS
+
+on:
+  push:
+    branches:
+      - main
+
+# REQUIRED: These permissions allow GitHub to request the OIDC token from AWS
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Check out the repository code
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java 25
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'corretto'
+          cache: maven
+
+      # 3. Build the application with Maven
+      - name: Build with Maven
+        run: ./mvnw clean package -DskipTests
+
+      # 4. Generate a unique deployment package name
+      - name: Generate Deployment Package Name
+        id: generate-name
+        run: echo "deploy_package=splendor-app-${{ github.sha }}.jar" >> $GITHUB_ENV
+
+      # 5. Rename the built JAR file
+      - name: Prepare Deployment Artifact
+        run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
+
+      # 6. Authenticate with AWS using your Role (No Access Keys!)
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 7. Deploy to Elastic Beanstalk
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          application_name: splendor-app # Must exactly match AWS Beanstalk App Name
+          environment_name: splendor-app-env # Must exactly match AWS Beanstalk Env Name
+          version_label: ${{ github.sha }}
+          region: ${{ secrets.AWS_REGION }}
+          deployment_package: ${{ env.deploy_package }}

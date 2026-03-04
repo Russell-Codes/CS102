@@ -3,3 +3,6 @@ give allow mvnw executable (mac)
 
 run
 ```./mvnw spring-boot:run```
+
+check verison
+```./mvnw -version```
