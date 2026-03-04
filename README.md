@@ -6,3 +6,6 @@ run
 
 check verison
 ```./mvnw -version```
+
+build
+```./mvnw clean package -DskipTests```
