@@ -53,11 +53,12 @@ jobs:
             # 7. Fetch the CNAME (URL) of the environment using the AWS CLI
             - name: Fetch the CNAME (URL) of the environment using the AWS CLI
               run: |
-                  aws elasticbeanstalk describe-environments \
-                    --application-name splendor-app \
-                    --environment-names splendor-app-env \
-                    --query "Environments[0].CNAME" \
-                    --output text
+                  URL=$(aws elasticbeanstalk describe-environments \
+                      --application-name splendor-app \
+                      --environment-names splendor-app-env \
+                      --query "Environments[0].CNAME" \
+                      --output text)
+                  echo "### Your app is deploying to: http://$URL" >> $GITHUB_STEP_SUMMARY
 
             # 8. Deploy to Elastic Beanstalk
             - name: Deploy to Elastic Beanstalk
