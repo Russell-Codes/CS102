@@ -41,15 +41,25 @@ jobs:
               run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
 
             # 6. Authenticate with AWS using your Role (No Access Keys!)
+            # This step MUST come before any custom AWS CLI commands
             - name: Configure AWS Credentials
-              id: aws_creds # Added ID to reference the outputs
+              id: aws_creds
               uses: aws-actions/configure-aws-credentials@v4
               with:
                   role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                   aws-region: ${{ secrets.AWS_REGION }}
-                  output-credentials: true # Crucial: exposes the temporary keys to the next step
+                  output-credentials: true # Crucial: exposes the temporary keys to the next steps
 
-            # 7. Deploy to Elastic Beanstalk
+            # 7. Fetch the CNAME (URL) of the environment using the AWS CLI
+            - name: Fetch the CNAME (URL) of the environment using the AWS CLI
+              run: |
+                  aws elasticbeanstalk describe-environments \
+                    --application-name splendor-app \
+                    --environment-names splendor-app-env \
+                    --query "Environments[0].CNAME" \
+                    --output text
+
+            # 8. Deploy to Elastic Beanstalk
             - name: Deploy to Elastic Beanstalk
               uses: einaregilsson/beanstalk-deploy@v22
               with:
@@ -62,19 +72,3 @@ jobs:
                   version_label: ${{ github.sha }}
                   region: ${{ secrets.AWS_REGION }}
                   deployment_package: ${{ env.deploy_package }}
-            - name: Fetch and Print Deployed URL
-              env:
-                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                  AWS_DEFAULT_REGION: "ap-southeast-1"
-              run: |
-                  # Fetch the CNAME (URL) of the environment using the AWS CLI
-                  APP_URL=$(aws elasticbeanstalk describe-environments \
-                      --environment-names "your-env-name" \
-                      --query "Environments[0].CNAME" \
-                      --output text)
-
-                  echo "==================================================="
-                  echo "🚀 Deployment Successful! "
-                  echo "🌍 Your application is live at: http://$APP_URL"
-                  echo "==================================================="
