@@ -3,12 +3,18 @@ package com.g1t7.splendor.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+<<<<<<< HEAD
 import java.util.Comparator;
+=======
+>>>>>>> remotes/origin/init
 import java.util.List;
 
 public class Game implements Serializable {
 
+<<<<<<< HEAD
     private GameConfig config;
+=======
+>>>>>>> remotes/origin/init
 
     // bankCoins[i] = number of coins in bank, indexed by GemColor ordinal
     private int[] bankCoins = new int[6];
@@ -20,6 +26,7 @@ public class Game implements Serializable {
     private List<Card> visibleCards = new ArrayList<>(12);
 
     private List<Noble> activeNobles = new ArrayList<>();
+<<<<<<< HEAD
     private List<Player> players = new ArrayList<>();
 
     private Card pendingCard = null;
@@ -32,12 +39,22 @@ public class Game implements Serializable {
     public Game() {
         config = new GameConfig();
     }
+=======
+    private Player[] players = new Player[2];
+
+    private Card pendingCard = null;
+    private int nowTurn = 0;
+    private String message = "";
+
+    public Game() {}
+>>>>>>> remotes/origin/init
 
     // -------------------------------------------------------------------------
     // Initialisation
     // -------------------------------------------------------------------------
 
     public void variableInit() {
+<<<<<<< HEAD
         int numPlayers = players.size();
         if (numPlayers < 2) numPlayers = 2;
 
@@ -47,6 +64,13 @@ public class Game implements Serializable {
 
         // Build and shuffle decks from CSV
         List<Card> allCards = CardData.buildDeck(config.getCardFile());
+=======
+        // Standard 2-player bank: 4 of each gem, 5 gold
+        bankCoins = new int[]{4, 4, 4, 4, 4, 5};
+
+        // Build and shuffle decks
+        List<Card> allCards = CardData.buildDeck();
+>>>>>>> remotes/origin/init
         for (Card c : allCards) {
             if (c.getTier() == 1) tier1Deck.add(c);
             else if (c.getTier() == 2) tier2Deck.add(c);
@@ -62,11 +86,18 @@ public class Game implements Serializable {
         for (int slot = 4; slot < 8; slot++) dealSlot(slot);
         for (int slot = 8; slot < 12; slot++) dealSlot(slot);
 
+<<<<<<< HEAD
         // Nobles: shuffle, keep (numPlayers + 1) per standard rules
         int nobleCount = config.getNobleCount(numPlayers);
         List<Noble> allNobles = NobleData.buildNobles();
         Collections.shuffle(allNobles);
         activeNobles = new ArrayList<>(allNobles.subList(0, Math.min(nobleCount, allNobles.size())));
+=======
+        // Nobles: shuffle, keep 3
+        List<Noble> allNobles = NobleData.buildNobles();
+        Collections.shuffle(allNobles);
+        activeNobles = new ArrayList<>(allNobles.subList(0, Math.min(3, allNobles.size())));
+>>>>>>> remotes/origin/init
     }
 
     private void dealSlot(int slot) {
@@ -86,6 +117,7 @@ public class Game implements Serializable {
     // Turn management
     // -------------------------------------------------------------------------
 
+<<<<<<< HEAD
     /**
      * Advance to the next player's turn.
      * Implements the Splendor end-of-game rule: once any player reaches the
@@ -124,6 +156,16 @@ public class Game implements Serializable {
 
     public Player getCurrentPlayer() {
         return players.get(nowTurn);
+=======
+    public void changeTurns() {
+        pendingCard = null;
+        message = "";
+        nowTurn = (nowTurn + 1) % 2;
+    }
+
+    public Player getCurrentPlayer() {
+        return players[nowTurn];
+>>>>>>> remotes/origin/init
     }
 
     // -------------------------------------------------------------------------
@@ -144,6 +186,7 @@ public class Game implements Serializable {
     // -------------------------------------------------------------------------
 
     public boolean isGameOver() {
+<<<<<<< HEAD
         return gameOver;
     }
 
@@ -157,6 +200,17 @@ public class Game implements Serializable {
                         .comparingInt(Player::getScore)
                         .thenComparing(Comparator.comparingInt((Player p) -> p.getCards().size()).reversed()))
                 .orElse(players.get(0));
+=======
+        return players[0].getScore() >= 15 || players[1].getScore() >= 15;
+    }
+
+    public Player getWinner() {
+        if (players[0].getScore() > players[1].getScore()) return players[0];
+        if (players[1].getScore() > players[0].getScore()) return players[1];
+        // Tie: fewer cards wins (more cards = less efficient)
+        return players[0].getCards().size() <= players[1].getCards().size()
+                ? players[0] : players[1];
+>>>>>>> remotes/origin/init
     }
 
     // -------------------------------------------------------------------------
@@ -178,16 +232,22 @@ public class Game implements Serializable {
         return tier3Deck.size();
     }
 
+<<<<<<< HEAD
     public int getWinScore() {
         return config.getWinScore();
     }
 
+=======
+>>>>>>> remotes/origin/init
     // -------------------------------------------------------------------------
     // Getters / Setters
     // -------------------------------------------------------------------------
 
+<<<<<<< HEAD
     public GameConfig getConfig() { return config; }
 
+=======
+>>>>>>> remotes/origin/init
     public int[] getBankCoins() { return bankCoins; }
     public void setBankCoins(int[] bankCoins) { this.bankCoins = bankCoins; }
 
@@ -200,8 +260,13 @@ public class Game implements Serializable {
     public List<Noble> getActiveNobles() { return activeNobles; }
     public void setActiveNobles(List<Noble> activeNobles) { this.activeNobles = activeNobles; }
 
+<<<<<<< HEAD
     public List<Player> getPlayers() { return players; }
     public void setPlayers(List<Player> players) { this.players = players; }
+=======
+    public Player[] getPlayers() { return players; }
+    public void setPlayers(Player[] players) { this.players = players; }
+>>>>>>> remotes/origin/init
 
     public Card getPendingCard() { return pendingCard; }
     public void setPendingCard(Card pendingCard) { this.pendingCard = pendingCard; }
@@ -211,6 +276,9 @@ public class Game implements Serializable {
 
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
+<<<<<<< HEAD
 
     public boolean isFinalRound() { return finalRound; }
+=======
+>>>>>>> remotes/origin/init
 }

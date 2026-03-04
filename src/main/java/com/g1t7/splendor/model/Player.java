@@ -12,7 +12,10 @@ public class Player implements Serializable {
 
     private Game game;
     private boolean online = true;
+<<<<<<< HEAD
     private boolean ai = false;
+=======
+>>>>>>> remotes/origin/init
     private String name;
     private int score;
     // mycoins[i] = coins held, indexed by GemColor ordinal (0=WHITE..5=GOLD)
@@ -29,12 +32,15 @@ public class Player implements Serializable {
         this.name = name;
     }
 
+<<<<<<< HEAD
     public Player(Game game, String name, boolean ai) {
         this.game = game;
         this.name = name;
         this.ai = ai;
     }
 
+=======
+>>>>>>> remotes/origin/init
     // -------------------------------------------------------------------------
     // Game actions
     // -------------------------------------------------------------------------
@@ -211,8 +217,11 @@ public class Player implements Serializable {
     public void setGame(Game game) { this.game = game; }
     public boolean isOnline() { return online; }
     public void setOnline(boolean online) { this.online = online; }
+<<<<<<< HEAD
     public boolean isAi() { return ai; }
     public void setAi(boolean ai) { this.ai = ai; }
+=======
+>>>>>>> remotes/origin/init
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public int getScore() { return score; }
