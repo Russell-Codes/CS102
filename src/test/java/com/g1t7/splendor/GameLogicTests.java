@@ -24,8 +24,8 @@ class GameLogicTests {
         game = new Game();
         p1 = new Player(game, "P1");
         p2 = new Player(game, "P2");
-        // game.getPlayers().add(p1);
-        // game.getPlayers().add(p2);
+        game.getPlayers().add(p1);
+        game.getPlayers().add(p2);
         game.variableInit();
     }
 
@@ -77,8 +77,8 @@ class GameLogicTests {
 
     @Test
     void csvLoads90Cards() {
-        // List<Card> cards = CardData.buildDeck("resources/cards.csv");
-        // assertEquals(90, cards.size(), "CSV should contain 90 cards");
+        List<Card> cards = CardData.buildDeck("resources/cards.csv");
+        assertEquals(90, cards.size(), "CSV should contain 90 cards");
     }
 
     // ===================== Take Coins =====================
@@ -150,7 +150,7 @@ class GameLogicTests {
 
     @Test
     void buyCardDeductsCoinsAndAddsBonus() {
-        Card card = new Card(1, GemColor.WHITE, 1, new int[]{1, 1, 1, 0, 0, 0});
+        Card card = new Card(1, GemColor.WHITE, 1, new int[] { 1, 1, 1, 0, 0, 0 });
         p1.getMycoins()[0] = 2; // white
         p1.getMycoins()[1] = 2; // blue
         p1.getMycoins()[2] = 2; // green
@@ -166,7 +166,7 @@ class GameLogicTests {
 
     @Test
     void buyCardUsesGoldForShortfall() {
-        Card card = new Card(1, GemColor.BLUE, 0, new int[]{2, 0, 0, 0, 0, 0});
+        Card card = new Card(1, GemColor.BLUE, 0, new int[] { 2, 0, 0, 0, 0, 0 });
         p1.getMycoins()[0] = 1; // 1 white, need 2
         p1.getMycoins()[5] = 2; // 2 gold
 
@@ -178,7 +178,7 @@ class GameLogicTests {
 
     @Test
     void buyCardAppliesBonusDiscount() {
-        Card card = new Card(2, GemColor.GREEN, 2, new int[]{3, 0, 0, 0, 0, 0});
+        Card card = new Card(2, GemColor.GREEN, 2, new int[] { 3, 0, 0, 0, 0, 0 });
         p1.getMycards()[0] = 2; // 2 white bonuses → effective cost = 1 white
         p1.getMycoins()[0] = 1;
 
@@ -189,7 +189,7 @@ class GameLogicTests {
 
     @Test
     void buyCardFailsIfCannotAfford() {
-        Card card = new Card(1, GemColor.RED, 0, new int[]{5, 0, 0, 0, 0, 0});
+        Card card = new Card(1, GemColor.RED, 0, new int[] { 5, 0, 0, 0, 0, 0 });
         p1.getMycoins()[0] = 1; // only 1 white, need 5
         boolean ok = p1.buyCard(card);
         assertFalse(ok, "Should not afford this card");
@@ -197,7 +197,7 @@ class GameLogicTests {
 
     @Test
     void buyCardReturnsCoinsToBank() {
-        Card card = new Card(1, GemColor.WHITE, 0, new int[]{2, 0, 0, 0, 0, 0});
+        Card card = new Card(1, GemColor.WHITE, 0, new int[] { 2, 0, 0, 0, 0, 0 });
         p1.getMycoins()[0] = 3;
         int bankWhiteBefore = game.getBankCoins()[0];
 
@@ -224,10 +224,10 @@ class GameLogicTests {
     @Test
     void cannotReserveMoreThan3Cards() {
         for (int i = 0; i < 3; i++) {
-            Card c = new Card(1, GemColor.WHITE, 0, new int[]{0, 0, 0, 0, 0, 0});
+            Card c = new Card(1, GemColor.WHITE, 0, new int[] { 0, 0, 0, 0, 0, 0 });
             p1.escortCard(c);
         }
-        Card fourth = new Card(1, GemColor.BLUE, 0, new int[]{0, 0, 0, 0, 0, 0});
+        Card fourth = new Card(1, GemColor.BLUE, 0, new int[] { 0, 0, 0, 0, 0, 0 });
         boolean ok = p1.escortCard(fourth);
         assertFalse(ok, "Should not allow more than 3 reserved cards");
     }
@@ -310,33 +310,35 @@ class GameLogicTests {
         p1.setScore(15);
         p2.setScore(15);
         // P1 bought 5 cards, P2 bought 3 → P2 wins tiebreaker (fewer cards)
-        for (int i = 0; i < 5; i++) p1.getCards().push(new Card(1, GemColor.WHITE, 3, new int[6]));
-        for (int i = 0; i < 3; i++) p2.getCards().push(new Card(1, GemColor.WHITE, 5, new int[6]));
+        for (int i = 0; i < 5; i++)
+            p1.getCards().push(new Card(1, GemColor.WHITE, 3, new int[6]));
+        for (int i = 0; i < 3; i++)
+            p2.getCards().push(new Card(1, GemColor.WHITE, 5, new int[6]));
 
         assertEquals(p2, game.getWinner(), "With same score, fewer cards wins");
     }
 
     @Test
     void winScoreFromConfig() {
-        // assertEquals(15, game.getWinScore(), "Win score should match config (15)");
+        assertEquals(15, game.getWinScore(), "Win score should match config (15)");
     }
 
     // ===================== AI Player =====================
 
     @Test
     void aiPlayerTakesTurn() {
-        // Player aiPlayer = new Player(game, "AI", true);
-        // game.getPlayers().add(aiPlayer);
-        // assertTrue(aiPlayer.isAi());
+        Player aiPlayer = new Player(game, "AI", true);
+        game.getPlayers().add(aiPlayer);
+        assertTrue(aiPlayer.isAi());
 
-        // boolean acted = AIPlayer.takeTurn(game, aiPlayer);
-        // assertTrue(acted, "AI should take a valid action");
-        // // AI should have either taken coins, bought a card, or reserved one
-        // boolean hasCoins = aiPlayer.getTotalCoins() > 0;
-        // boolean hasCards = !aiPlayer.getCards().isEmpty();
-        // boolean hasReserved = !aiPlayer.getReservedCards().isEmpty();
-        // assertTrue(hasCoins || hasCards || hasReserved,
-        //         "AI should have gained something (coins, card, or reserve)");
+        boolean acted = AIPlayer.takeTurn(game, aiPlayer);
+        assertTrue(acted, "AI should take a valid action");
+        // AI should have either taken coins, bought a card, or reserved one
+        boolean hasCoins = aiPlayer.getTotalCoins() > 0;
+        boolean hasCards = !aiPlayer.getCards().isEmpty();
+        boolean hasReserved = !aiPlayer.getReservedCards().isEmpty();
+        assertTrue(hasCoins || hasCards || hasReserved,
+                "AI should have gained something (coins, card, or reserve)");
     }
 
     // ===================== Card Replenishment =====================
@@ -362,9 +364,9 @@ class GameLogicTests {
     @Test
     void threePlayerGameHasCorrectSetup() {
         Game g3 = new Game();
-        // g3.getPlayers().add(new Player(g3, "A"));
-        // g3.getPlayers().add(new Player(g3, "B"));
-        // g3.getPlayers().add(new Player(g3, "C"));
+        g3.getPlayers().add(new Player(g3, "A"));
+        g3.getPlayers().add(new Player(g3, "B"));
+        g3.getPlayers().add(new Player(g3, "C"));
         g3.variableInit();
 
         assertEquals(5, g3.getBankCoins()[0], "3-player: 5 gems each");
@@ -374,10 +376,10 @@ class GameLogicTests {
     @Test
     void fourPlayerGameHasCorrectSetup() {
         Game g4 = new Game();
-        // g4.getPlayers().add(new Player(g4, "A"));
-        // g4.getPlayers().add(new Player(g4, "B"));
-        // g4.getPlayers().add(new Player(g4, "C"));
-        // g4.getPlayers().add(new Player(g4, "D"));
+        g4.getPlayers().add(new Player(g4, "A"));
+        g4.getPlayers().add(new Player(g4, "B"));
+        g4.getPlayers().add(new Player(g4, "C"));
+        g4.getPlayers().add(new Player(g4, "D"));
         g4.variableInit();
 
         assertEquals(7, g4.getBankCoins()[0], "4-player: 7 gems each");
@@ -390,9 +392,9 @@ class GameLogicTests {
         Player a = new Player(g3, "A");
         Player b = new Player(g3, "B");
         Player c = new Player(g3, "C");
-        // g3.getPlayers().add(a);
-        // g3.getPlayers().add(b);
-        // g3.getPlayers().add(c);
+        g3.getPlayers().add(a);
+        g3.getPlayers().add(b);
+        g3.getPlayers().add(c);
         g3.variableInit();
 
         assertEquals(a, g3.getCurrentPlayer());
