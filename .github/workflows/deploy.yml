@@ -14,6 +14,8 @@ jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
 
+        if: github.repository == 'Russell-Codes/CS102' # Ensure this workflow only runs for the intended repository
+
         steps:
             # 1. Check out the repository code
             - name: Checkout Code
