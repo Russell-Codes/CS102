@@ -38,51 +38,66 @@ public class GameConfig implements Serializable {
         if (file.exists()) {
             try (InputStream is = new FileInputStream(file)) {
                 props.load(is);
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         } else {
             try (InputStream is = getClass().getClassLoader().getResourceAsStream("config.properties")) {
-                if (is != null) props.load(is);
-            } catch (IOException ignored) {}
+                if (is != null)
+                    props.load(is);
+            } catch (IOException ignored) {
+            }
         }
 
-        winScore      = getInt(props, "win_score", winScore);
-        cardFile      = props.getProperty("card_file", cardFile).trim();
-        gems2Players  = getInt(props, "gems_2_players", gems2Players);
-        gems3Players  = getInt(props, "gems_3_players", gems3Players);
-        gems4Players  = getInt(props, "gems_4_players", gems4Players);
+        winScore = getInt(props, "win_score", winScore);
+        cardFile = props.getProperty("card_file", cardFile).trim();
+        gems2Players = getInt(props, "gems_2_players", gems2Players);
+        gems3Players = getInt(props, "gems_3_players", gems3Players);
+        gems4Players = getInt(props, "gems_4_players", gems4Players);
         nobles2Players = getInt(props, "nobles_2_players", nobles2Players);
         nobles3Players = getInt(props, "nobles_3_players", nobles3Players);
         nobles4Players = getInt(props, "nobles_4_players", nobles4Players);
-        goldCoins     = getInt(props, "gold_coins", goldCoins);
+        goldCoins = getInt(props, "gold_coins", goldCoins);
     }
 
     private int getInt(Properties props, String key, int defaultVal) {
         String val = props.getProperty(key);
-        if (val == null) return defaultVal;
-        try { return Integer.parseInt(val.trim()); }
-        catch (NumberFormatException e) { return defaultVal; }
+        if (val == null)
+            return defaultVal;
+        try {
+            return Integer.parseInt(val.trim());
+        } catch (NumberFormatException e) {
+            return defaultVal;
+        }
     }
 
     /** Returns the initial gem count for the given number of players (2-4). */
     public int getGemCount(int numPlayers) {
         return switch (numPlayers) {
-            case 3  -> gems3Players;
-            case 4  -> gems4Players;
-            default -> gems2Players;     // 2 players is the default
+            case 3 -> gems3Players;
+            case 4 -> gems4Players;
+            default -> gems2Players; // 2 players is the default
         };
     }
 
     /** Returns the number of nobles for the given number of players (2-4). */
     public int getNobleCount(int numPlayers) {
         return switch (numPlayers) {
-            case 3  -> nobles3Players;
-            case 4  -> nobles4Players;
+            case 3 -> nobles3Players;
+            case 4 -> nobles4Players;
             default -> nobles2Players;
         };
     }
 
     // Getters
-    public int getWinScore()      { return winScore; }
-    public String getCardFile()   { return cardFile; }
-    public int getGoldCoins()     { return goldCoins; }
+    public int getWinScore() {
+        return winScore;
+    }
+
+    public String getCardFile() {
+        return cardFile;
+    }
+
+    public int getGoldCoins() {
+        return goldCoins;
+    }
 }

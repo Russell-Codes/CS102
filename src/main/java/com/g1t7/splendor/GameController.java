@@ -23,14 +23,16 @@ public class GameController {
     @GetMapping("/game")
     public String showGame(HttpSession session, Model model) {
         Game game = (Game) session.getAttribute("game");
-        if (game == null) return "redirect:/";
-        if (game.isGameOver()) return "redirect:/gameover";
+        if (game == null)
+            return "redirect:/";
+        if (game.isGameOver())
+            return "redirect:/gameover";
         model.addAttribute("game", game);
         return "game";
     }
 
     // -------------------------------------------------------------------------
-    // POST /game/take-coins   (PRG)
+    // POST /game/take-coins (PRG)
     // -------------------------------------------------------------------------
 
     @PostMapping("/game/take-coins")
@@ -43,14 +45,16 @@ public class GameController {
             HttpSession session) {
 
         Game game = (Game) session.getAttribute("game");
-        if (game == null) return "redirect:/";
+        if (game == null)
+            return "redirect:/";
 
-        // Build color list by repeating each color the requested number of times (clamped 0-2)
+        // Build color list by repeating each color the requested number of times
+        // (clamped 0-2)
         List<String> selectedColors = new ArrayList<>();
         addColor(selectedColors, "WHITE", white);
-        addColor(selectedColors, "BLUE",  blue);
+        addColor(selectedColors, "BLUE", blue);
         addColor(selectedColors, "GREEN", green);
-        addColor(selectedColors, "RED",   red);
+        addColor(selectedColors, "RED", red);
         addColor(selectedColors, "BLACK", black);
 
         if (selectedColors.isEmpty()) {
@@ -59,16 +63,18 @@ public class GameController {
         }
 
         boolean ok = game.getCurrentPlayer().exchangeCoin(selectedColors);
-        if (ok) game.changeTurns();
+        if (ok)
+            game.changeTurns();
         return "redirect:/game";
     }
 
     private void addColor(List<String> list, String color, int count) {
-        for (int i = 0; i < Math.min(Math.max(count, 0), 2); i++) list.add(color);
+        for (int i = 0; i < Math.min(Math.max(count, 0), 2); i++)
+            list.add(color);
     }
 
     // -------------------------------------------------------------------------
-    // POST /game/buy-card   (PRG)
+    // POST /game/buy-card (PRG)
     // cardIndex ≥ 0 → visible board slot; < 0 → reserved card (-1 = slot 0, etc.)
     // -------------------------------------------------------------------------
 
@@ -78,7 +84,8 @@ public class GameController {
             HttpSession session) {
 
         Game game = (Game) session.getAttribute("game");
-        if (game == null) return "redirect:/";
+        if (game == null)
+            return "redirect:/";
 
         Player current = game.getCurrentPlayer();
         Card card = resolveCard(game, current, cardIndex);
@@ -92,7 +99,8 @@ public class GameController {
             if (cardIndex >= 0) {
                 game.replenishCard(cardIndex);
             } else {
-                // Remove from player's reserved list (already done in buyCard via card reference)
+                // Remove from player's reserved list (already done in buyCard via card
+                // reference)
                 current.getReservedCards().remove(card);
             }
             game.changeTurns();
@@ -101,7 +109,7 @@ public class GameController {
     }
 
     // -------------------------------------------------------------------------
-    // POST /game/reserve-card   (PRG)
+    // POST /game/reserve-card (PRG)
     // -------------------------------------------------------------------------
 
     @PostMapping("/game/reserve-card")
@@ -110,7 +118,8 @@ public class GameController {
             HttpSession session) {
 
         Game game = (Game) session.getAttribute("game");
-        if (game == null) return "redirect:/";
+        if (game == null)
+            return "redirect:/";
 
         Player current = game.getCurrentPlayer();
 
@@ -141,7 +150,8 @@ public class GameController {
     @GetMapping("/gameover")
     public String showGameOver(HttpSession session, Model model) {
         Game game = (Game) session.getAttribute("game");
-        if (game == null) return "redirect:/";
+        if (game == null)
+            return "redirect:/";
         model.addAttribute("game", game);
         model.addAttribute("winner", game.getWinner());
         return "gameover";
@@ -163,18 +173,20 @@ public class GameController {
 
     /**
      * cardIndex >= 0 → visible board slot.
-     * cardIndex < 0  → reserved card: decode as -(reservedIndex + 1).
-     *   e.g. -1 → reservedCards.get(0), -2 → get(1), -3 → get(2)
+     * cardIndex < 0 → reserved card: decode as -(reservedIndex + 1).
+     * e.g. -1 → reservedCards.get(0), -2 → get(1), -3 → get(2)
      */
     private Card resolveCard(Game game, Player player, int cardIndex) {
         if (cardIndex >= 0) {
             List<Card> visible = game.getVisibleCards();
-            if (cardIndex >= visible.size()) return null;
+            if (cardIndex >= visible.size())
+                return null;
             return visible.get(cardIndex);
         } else {
             int reservedIdx = -(cardIndex + 1);
             List<Card> reserved = player.getReservedCards();
-            if (reservedIdx >= reserved.size()) return null;
+            if (reservedIdx >= reserved.size())
+                return null;
             return reserved.get(reservedIdx);
         }
     }

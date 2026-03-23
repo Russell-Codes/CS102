@@ -6,13 +6,14 @@ import java.util.*;
 /**
  * Simple computer opponent for Splendor.
  * Strategy priority:
- *   1. Buy the highest-VP affordable card (board or reserved).
- *   2. Reserve a high-VP card that is close to affordable.
- *   3. Take coins toward the cheapest affordable card's remaining cost.
+ * 1. Buy the highest-VP affordable card (board or reserved).
+ * 2. Reserve a high-VP card that is close to affordable.
+ * 3. Take coins toward the cheapest affordable card's remaining cost.
  */
 public class AIPlayer implements Serializable {
 
-    private AIPlayer() {}
+    private AIPlayer() {
+    }
 
     /**
      * Execute one AI turn for the given player in the given game.
@@ -20,10 +21,12 @@ public class AIPlayer implements Serializable {
      */
     public static boolean takeTurn(Game game, Player player) {
         // 1. Try to buy the best affordable card (highest VP first)
-        if (tryBuyBestCard(game, player)) return true;
+        if (tryBuyBestCard(game, player))
+            return true;
 
         // 2. Try to reserve a high-VP card if we have room
-        if (tryReserveCard(game, player)) return true;
+        if (tryReserveCard(game, player))
+            return true;
 
         // 3. Take coins toward the cheapest needed card cost
         return tryTakeCoins(game, player);
@@ -62,7 +65,8 @@ public class AIPlayer implements Serializable {
             }
         }
 
-        if (best == null) return false;
+        if (best == null)
+            return false;
 
         boolean ok = player.buyCard(best);
         if (ok) {
@@ -89,7 +93,8 @@ public class AIPlayer implements Serializable {
     // Strategy 2: Reserve a high-VP card
     // -------------------------------------------------------------------------
     private static boolean tryReserveCard(Game game, Player player) {
-        if (player.getReservedCards().size() >= 3) return false;
+        if (player.getReservedCards().size() >= 3)
+            return false;
 
         Card best = null;
         int bestSlot = -1;
@@ -97,7 +102,7 @@ public class AIPlayer implements Serializable {
         List<Card> visible = game.getVisibleCards();
         for (int i = 0; i < visible.size(); i++) {
             Card c = visible.get(i);
-            if (c != null && c.getValue() >= 2) {  // Only reserve valuable cards
+            if (c != null && c.getValue() >= 2) { // Only reserve valuable cards
                 if (best == null || c.getValue() > best.getValue()) {
                     best = c;
                     bestSlot = i;
@@ -105,7 +110,8 @@ public class AIPlayer implements Serializable {
             }
         }
 
-        if (best == null) return false;
+        if (best == null)
+            return false;
 
         boolean ok = player.escortCard(best);
         if (ok) {
@@ -160,7 +166,8 @@ public class AIPlayer implements Serializable {
             }
         }
 
-        if (selection.isEmpty()) return true; // no coins available; pass
+        if (selection.isEmpty())
+            return true; // no coins available; pass
 
         return player.exchangeCoin(selection);
     }
@@ -174,7 +181,8 @@ public class AIPlayer implements Serializable {
         int minTotalCost = Integer.MAX_VALUE;
 
         for (Card c : game.getVisibleCards()) {
-            if (c == null) continue;
+            if (c == null)
+                continue;
             int total = 0;
             for (int i = 0; i < 5; i++) {
                 total += Math.max(0, c.getCost()[i] - player.getMycards()[i] - player.getMycoins()[i]);
