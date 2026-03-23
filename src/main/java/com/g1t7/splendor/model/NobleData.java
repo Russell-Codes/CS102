@@ -6,11 +6,12 @@ import java.util.List;
 /**
  * Standard 10 noble tile definitions for Splendor.
  * Noble(white, blue, green, red, black) — each requiring that many purchased
- * cards of the matching gem colour.  All nobles grant 3 prestige points.
+ * cards of the matching gem colour. All nobles grant 3 prestige points.
  */
 public class NobleData {
 
-    private NobleData() {}
+    private NobleData() {
+    }
 
     public static List<Noble> buildNobles() {
         List<Noble> nobles = new ArrayList<>();

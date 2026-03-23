@@ -5,7 +5,8 @@ package com.g1t7.splendor.model;
  */
 public class Common {
 
-    private Common() {}
+    private Common() {
+    }
 
     /** Returns the CSS class name for a given GemColor index. */
     public static String getCssClass(GemColor color) {

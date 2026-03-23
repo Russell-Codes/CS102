@@ -9,7 +9,6 @@ import java.util.Stack;
 
 public class Player implements Serializable {
 
-
     private Game game;
     private boolean online = true;
     private boolean ai = false;
@@ -17,12 +16,14 @@ public class Player implements Serializable {
     private int score;
     // mycoins[i] = coins held, indexed by GemColor ordinal (0=WHITE..5=GOLD)
     private int[] mycoins = new int[6];
-    // mycards[i] = card bonus (purchased cards) per GemColor ordinal (0=WHITE..4=BLACK)
+    // mycards[i] = card bonus (purchased cards) per GemColor ordinal
+    // (0=WHITE..4=BLACK)
     private int[] mycards = new int[5];
     private List<Card> reservedCards = new ArrayList<>();
     private Stack<Card> cards = new Stack<>();
 
-    public Player() {}
+    public Player() {
+    }
 
     public Player(Game game, String name) {
         this.game = game;
@@ -40,7 +41,8 @@ public class Player implements Serializable {
     // -------------------------------------------------------------------------
 
     /**
-     * Attempt to buy a card. Auto-deducts coins: colored first, gold covers shortfall.
+     * Attempt to buy a card. Auto-deducts coins: colored first, gold covers
+     * shortfall.
      * return true if purchase succeeded
      */
     public boolean buyCard(Card card) {
@@ -124,7 +126,10 @@ public class Player implements Serializable {
             int distinctCount = 0;
             int sameColorIdx = -1;
             for (int i = 0; i < 5; i++) {
-                if (toTake[i] > 0) { distinctCount++; sameColorIdx = i; }
+                if (toTake[i] > 0) {
+                    distinctCount++;
+                    sameColorIdx = i;
+                }
             }
             if (distinctCount != 1 || toTake[sameColorIdx] != 2) {
                 game.setMessage("When taking 2 coins, they must be the same color.");
@@ -164,6 +169,7 @@ public class Player implements Serializable {
 
     /**
      * Reserve a card (from the visible board or deck).
+     * 
      * @return true if reservation succeeded
      */
     public boolean escortCard(Card card) {
@@ -185,7 +191,8 @@ public class Player implements Serializable {
      * Check if any active noble's requirements are satisfied; award first match.
      */
     public void checkNobles(List<Noble> nobles) {
-        if (nobles == null) return;
+        if (nobles == null)
+            return;
         Iterator<Noble> it = nobles.iterator();
         while (it.hasNext()) {
             Noble noble = it.next();
@@ -199,7 +206,8 @@ public class Player implements Serializable {
 
     public int getTotalCoins() {
         int total = 0;
-        for (int c : mycoins) total += c;
+        for (int c : mycoins)
+            total += c;
         return total;
     }
 
@@ -207,20 +215,67 @@ public class Player implements Serializable {
     // Getters / Setters
     // -------------------------------------------------------------------------
 
-    public Game getGame() { return game; }
-    public void setGame(Game game) { this.game = game; }
-    public boolean isOnline() { return online; }
-    public void setOnline(boolean online) { this.online = online; }
-    public boolean isAi() { return ai; }
-    public void setAi(boolean ai) { this.ai = ai; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public int getScore() { return score; }
-    public void setScore(int score) { this.score = score; }
-    public int[] getMycoins() { return mycoins; }
-    public void setMycoins(int[] mycoins) { this.mycoins = mycoins; }
-    public int[] getMycards() { return mycards; }
-    public void setMycards(int[] mycards) { this.mycards = mycards; }
-    public List<Card> getReservedCards() { return reservedCards; }
-    public Stack<Card> getCards() { return cards; }
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
+    public boolean isOnline() {
+        return online;
+    }
+
+    public void setOnline(boolean online) {
+        this.online = online;
+    }
+
+    public boolean isAi() {
+        return ai;
+    }
+
+    public void setAi(boolean ai) {
+        this.ai = ai;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
+    }
+
+    public int[] getMycoins() {
+        return mycoins;
+    }
+
+    public void setMycoins(int[] mycoins) {
+        this.mycoins = mycoins;
+    }
+
+    public int[] getMycards() {
+        return mycards;
+    }
+
+    public void setMycards(int[] mycards) {
+        this.mycards = mycards;
+    }
+
+    public List<Card> getReservedCards() {
+        return reservedCards;
+    }
+
+    public Stack<Card> getCards() {
+        return cards;
+    }
 }

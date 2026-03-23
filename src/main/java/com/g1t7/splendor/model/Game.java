@@ -16,7 +16,8 @@ public class Game implements Serializable {
     private List<Card> tier1Deck = new ArrayList<>();
     private List<Card> tier2Deck = new ArrayList<>();
     private List<Card> tier3Deck = new ArrayList<>();
-    // visibleCards: indices 0-3 = tier1, 4-7 = tier2, 8-11 = tier3; null = empty slot
+    // visibleCards: indices 0-3 = tier1, 4-7 = tier2, 8-11 = tier3; null = empty
+    // slot
     private List<Card> visibleCards = new ArrayList<>(12);
 
     private List<Noble> activeNobles = new ArrayList<>();
@@ -26,7 +27,7 @@ public class Game implements Serializable {
     private int nowTurn = 0;
     private int startingPlayer = 0; // who started this round
     private String message = "";
-    private boolean finalRound = false;     // set true once any player hits win score
+    private boolean finalRound = false; // set true once any player hits win score
     private boolean gameOver = false;
 
     public Game() {
@@ -39,28 +40,36 @@ public class Game implements Serializable {
 
     public void variableInit() {
         int numPlayers = players.size();
-        if (numPlayers < 2) numPlayers = 2;
+        if (numPlayers < 2)
+            numPlayers = 2;
 
         int gemCount = config.getGemCount(numPlayers);
         int goldCount = config.getGoldCoins();
-        bankCoins = new int[]{gemCount, gemCount, gemCount, gemCount, gemCount, goldCount};
+        bankCoins = new int[] { gemCount, gemCount, gemCount, gemCount, gemCount, goldCount };
 
         // Build and shuffle decks from CSV
         List<Card> allCards = CardData.buildDeck(config.getCardFile());
         for (Card c : allCards) {
-            if (c.getTier() == 1) tier1Deck.add(c);
-            else if (c.getTier() == 2) tier2Deck.add(c);
-            else tier3Deck.add(c);
+            if (c.getTier() == 1)
+                tier1Deck.add(c);
+            else if (c.getTier() == 2)
+                tier2Deck.add(c);
+            else
+                tier3Deck.add(c);
         }
         Collections.shuffle(tier1Deck);
         Collections.shuffle(tier2Deck);
         Collections.shuffle(tier3Deck);
 
         // Deal 4 face-up per tier (12 slots total)
-        for (int i = 0; i < 12; i++) visibleCards.add(null);
-        for (int slot = 0; slot < 4; slot++) dealSlot(slot);
-        for (int slot = 4; slot < 8; slot++) dealSlot(slot);
-        for (int slot = 8; slot < 12; slot++) dealSlot(slot);
+        for (int i = 0; i < 12; i++)
+            visibleCards.add(null);
+        for (int slot = 0; slot < 4; slot++)
+            dealSlot(slot);
+        for (int slot = 4; slot < 8; slot++)
+            dealSlot(slot);
+        for (int slot = 8; slot < 12; slot++)
+            dealSlot(slot);
 
         // Nobles: shuffle, keep (numPlayers + 1) per standard rules
         int nobleCount = config.getNobleCount(numPlayers);
@@ -77,8 +86,10 @@ public class Game implements Serializable {
     }
 
     private List<Card> deckForSlot(int slot) {
-        if (slot < 4) return tier1Deck;
-        if (slot < 8) return tier2Deck;
+        if (slot < 4)
+            return tier1Deck;
+        if (slot < 8)
+            return tier2Deck;
         return tier3Deck;
     }
 
@@ -117,7 +128,7 @@ public class Game implements Serializable {
         if (next.isAi() && !gameOver) {
             boolean acted = AIPlayer.takeTurn(this, next);
             if (acted) {
-                changeTurns();  // recursively advance past all consecutive AI players
+                changeTurns(); // recursively advance past all consecutive AI players
             }
         }
     }
@@ -173,8 +184,10 @@ public class Game implements Serializable {
     }
 
     public int getDeckSize(int tier) {
-        if (tier == 1) return tier1Deck.size();
-        if (tier == 2) return tier2Deck.size();
+        if (tier == 1)
+            return tier1Deck.size();
+        if (tier == 2)
+            return tier2Deck.size();
         return tier3Deck.size();
     }
 
@@ -186,31 +199,75 @@ public class Game implements Serializable {
     // Getters / Setters
     // -------------------------------------------------------------------------
 
-    public GameConfig getConfig() { return config; }
+    public GameConfig getConfig() {
+        return config;
+    }
 
-    public int[] getBankCoins() { return bankCoins; }
-    public void setBankCoins(int[] bankCoins) { this.bankCoins = bankCoins; }
+    public int[] getBankCoins() {
+        return bankCoins;
+    }
 
-    public List<Card> getTier1Deck() { return tier1Deck; }
-    public List<Card> getTier2Deck() { return tier2Deck; }
-    public List<Card> getTier3Deck() { return tier3Deck; }
+    public void setBankCoins(int[] bankCoins) {
+        this.bankCoins = bankCoins;
+    }
 
-    public List<Card> getVisibleCards() { return visibleCards; }
+    public List<Card> getTier1Deck() {
+        return tier1Deck;
+    }
 
-    public List<Noble> getActiveNobles() { return activeNobles; }
-    public void setActiveNobles(List<Noble> activeNobles) { this.activeNobles = activeNobles; }
+    public List<Card> getTier2Deck() {
+        return tier2Deck;
+    }
 
-    public List<Player> getPlayers() { return players; }
-    public void setPlayers(List<Player> players) { this.players = players; }
+    public List<Card> getTier3Deck() {
+        return tier3Deck;
+    }
 
-    public Card getPendingCard() { return pendingCard; }
-    public void setPendingCard(Card pendingCard) { this.pendingCard = pendingCard; }
+    public List<Card> getVisibleCards() {
+        return visibleCards;
+    }
 
-    public int getNowTurn() { return nowTurn; }
-    public void setNowTurn(int nowTurn) { this.nowTurn = nowTurn; }
+    public List<Noble> getActiveNobles() {
+        return activeNobles;
+    }
 
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
+    public void setActiveNobles(List<Noble> activeNobles) {
+        this.activeNobles = activeNobles;
+    }
 
-    public boolean isFinalRound() { return finalRound; }
+    public List<Player> getPlayers() {
+        return players;
+    }
+
+    public void setPlayers(List<Player> players) {
+        this.players = players;
+    }
+
+    public Card getPendingCard() {
+        return pendingCard;
+    }
+
+    public void setPendingCard(Card pendingCard) {
+        this.pendingCard = pendingCard;
+    }
+
+    public int getNowTurn() {
+        return nowTurn;
+    }
+
+    public void setNowTurn(int nowTurn) {
+        this.nowTurn = nowTurn;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public boolean isFinalRound() {
+        return finalRound;
+    }
 }
