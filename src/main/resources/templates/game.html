@@ -308,6 +308,14 @@
                 class="card-gem"
                 th:text="${rc.gemColor.name().toLowerCase()}"
               ></span>
+              <div class="card-cost">
+                <span
+                  th:each="i : ${#numbers.sequence(0, 4)}"
+                  th:if="${rc.cost[i] > 0}"
+                  th:class="'gem-cost gem-' + ${game.gemColorName(i)}"
+                  th:text="${rc.cost[i]}"
+                ></span>
+              </div>
               <!-- Buy from reserve: only active player's reserved cards show buy button -->
               <form
                 th:if="${pStat.index == game.nowTurn and !game.pendingDiscard}"
