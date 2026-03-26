@@ -62,9 +62,22 @@ public class GameController {
             return "redirect:/game";
         }
 
-        boolean ok = game.getCurrentPlayer().exchangeCoin(selectedColors);
-        if (ok)
-            game.changeTurns();
+        if (game.isPendingDiscard()) {
+            game.setMessage("You must discard coins before taking another action.");
+            return "redirect:/game";
+        }
+
+        Player current = game.getCurrentPlayer();
+        boolean ok = current.exchangeCoin(selectedColors);
+        if (ok) {
+            if (current.getTotalCoins() > 10) {
+                game.setPendingDiscard(true);
+                game.setMessage("You have " + current.getTotalCoins()
+                        + " coins. Discard down to 10.");
+            } else {
+                game.changeTurns();
+            }
+        }
         return "redirect:/game";
     }
 
@@ -86,6 +99,11 @@ public class GameController {
         Game game = (Game) session.getAttribute("game");
         if (game == null)
             return "redirect:/";
+
+        if (game.isPendingDiscard()) {
+            game.setMessage("You must discard coins before taking another action.");
+            return "redirect:/game";
+        }
 
         Player current = game.getCurrentPlayer();
         Card card = resolveCard(game, current, cardIndex);
@@ -121,6 +139,11 @@ public class GameController {
         if (game == null)
             return "redirect:/";
 
+        if (game.isPendingDiscard()) {
+            game.setMessage("You must discard coins before taking another action.");
+            return "redirect:/game";
+        }
+
         Player current = game.getCurrentPlayer();
 
         // Only visible board cards can be reserved (cardIndex 0–11)
@@ -138,7 +161,42 @@ public class GameController {
         boolean ok = current.escortCard(card);
         if (ok) {
             game.replenishCard(cardIndex);
+            if (current.getTotalCoins() > 10) {
+                game.setPendingDiscard(true);
+                game.setMessage("You have " + current.getTotalCoins()
+                        + " coins. Discard down to 10.");
+            } else {
+                game.changeTurns();
+            }
+        }
+        return "redirect:/game";
+    }
+
+    // -------------------------------------------------------------------------
+    // POST /game/discard-coins (PRG)
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/game/discard-coins")
+    public String discardCoins(
+            @RequestParam("color") String color,
+            HttpSession session) {
+
+        Game game = (Game) session.getAttribute("game");
+        if (game == null)
+            return "redirect:/";
+
+        if (!game.isPendingDiscard()) {
+            return "redirect:/game";
+        }
+
+        Player current = game.getCurrentPlayer();
+        boolean ok = current.discardCoin(color);
+        if (ok && current.getTotalCoins() <= 10) {
+            game.setPendingDiscard(false);
             game.changeTurns();
+        } else if (ok) {
+            game.setMessage("You have " + current.getTotalCoins()
+                    + " coins. Discard down to 10.");
         }
         return "redirect:/game";
     }

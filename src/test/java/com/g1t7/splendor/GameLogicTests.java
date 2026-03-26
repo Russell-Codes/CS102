@@ -123,14 +123,24 @@ class GameLogicTests {
     }
 
     @Test
-    void cannotExceed10Coins() {
+    void canTakeCoinsOver10ThenDiscard() {
         // Give player 9 coins already
-        p1.getMycoins()[0] = 3;
-        p1.getMycoins()[1] = 3;
-        p1.getMycoins()[2] = 3;
-        // Trying to take 3 more (total would be 12) should fail
+        p1.getMycoins()[0] = 3; // WHITE
+        p1.getMycoins()[1] = 3; // BLUE
+        p1.getMycoins()[2] = 3; // GREEN
+        // Taking 3 more (total = 12) should succeed
         boolean ok = p1.exchangeCoin(List.of("RED", "GREEN", "BLACK"));
-        assertFalse(ok, "Should not allow going over 10 coins");
+        assertTrue(ok, "Should allow taking coins over 10");
+        assertEquals(12, p1.getTotalCoins());
+
+        // Discard 2 coins to get back to 10
+        assertTrue(p1.discardCoin("RED"));
+        assertEquals(11, p1.getTotalCoins());
+        assertTrue(p1.discardCoin("BLACK"));
+        assertEquals(10, p1.getTotalCoins());
+
+        // Cannot discard a color you don't have
+        assertFalse(p1.discardCoin("RED"));
     }
 
     @Test

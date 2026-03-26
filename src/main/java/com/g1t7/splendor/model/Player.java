@@ -97,7 +97,7 @@ public class Player implements Serializable {
      */
     public boolean exchangeCoin(List<String> selectedColors) {
         if (selectedColors == null || selectedColors.isEmpty() || selectedColors.size() > 3) {
-            game.setMessage("Select 1–3 coins.");
+            game.setMessage("Select 1-3 coins.");
             return false;
         }
 
@@ -153,12 +153,6 @@ public class Player implements Serializable {
             }
         }
 
-        // Validate hand limit
-        if (getTotalCoins() + selectedColors.size() > 10) {
-            game.setMessage("You cannot hold more than 10 coins.");
-            return false;
-        }
-
         // Apply
         for (int i = 0; i < 5; i++) {
             mycoins[i] += toTake[i];
@@ -209,6 +203,28 @@ public class Player implements Serializable {
         for (int c : mycoins)
             total += c;
         return total;
+    }
+
+    /**
+     * Discard one coin of the given color back to the bank.
+     * Returns true if successful.
+     */
+    public boolean discardCoin(String color) {
+        GemColor gc;
+        try {
+            gc = GemColor.valueOf(color.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            game.setMessage("Invalid gem color: " + color);
+            return false;
+        }
+        int idx = gc.ordinal();
+        if (mycoins[idx] <= 0) {
+            game.setMessage("You don't have any " + color.toLowerCase() + " coins to discard.");
+            return false;
+        }
+        mycoins[idx]--;
+        game.getBankCoins()[idx]++;
+        return true;
     }
 
     // -------------------------------------------------------------------------

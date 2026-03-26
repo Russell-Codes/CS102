@@ -96,7 +96,7 @@
                     th:text="${card.cost[i]}"
                   ></span>
                 </div>
-                <div class="card-actions">
+                <div class="card-actions" th:if="${!game.pendingDiscard}">
                   <form
                     th:action="@{/game/buy-card}"
                     method="post"
@@ -129,8 +129,31 @@
           </div>
         </div>
 
+        <!-- Discard Panel (shown when player must discard to ≤10 coins) -->
+        <div class="coin-bank" th:if="${game.pendingDiscard}">
+          <h3>Discard Coins</h3>
+          <p class="coin-hint">
+            You have <strong th:text="${game.currentPlayer.totalCoins}">11</strong> coins.
+            Discard <strong th:text="${game.currentPlayer.totalCoins - 10}">1</strong> to get back to 10.
+          </p>
+          <div class="coins-row">
+            <div
+              th:each="i : ${#numbers.sequence(0, 5)}"
+              th:if="${game.currentPlayer.mycoins[i] > 0}"
+              th:class="'coin-spinner gem-' + ${game.gemColorName(i)}"
+            >
+              <span th:text="${game.gemColorName(i)}">white</span>
+              <span class="coin-count" th:text="'×' + ${game.currentPlayer.mycoins[i]}">×3</span>
+              <form th:action="@{/game/discard-coins}" method="post" style="display:inline">
+                <input type="hidden" name="color" th:value="${game.gemColorName(i).toUpperCase()}" />
+                <button type="submit" class="btn-small btn-reserve">Discard</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
         <!-- Coin Bank -->
-        <div class="coin-bank">
+        <div class="coin-bank" th:if="${!game.pendingDiscard}">
           <h3>Coin Bank</h3>
           <p class="coin-hint">
             Take up to 3 different gems, or 2 of the same (bank needs ≥4).
@@ -287,7 +310,7 @@
               ></span>
               <!-- Buy from reserve: only active player's reserved cards show buy button -->
               <form
-                th:if="${pStat.index == game.nowTurn}"
+                th:if="${pStat.index == game.nowTurn and !game.pendingDiscard}"
                 th:action="@{/game/buy-card}"
                 method="post"
                 style="display: inline"

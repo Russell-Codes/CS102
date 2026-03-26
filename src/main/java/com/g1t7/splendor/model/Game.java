@@ -29,6 +29,7 @@ public class Game implements Serializable {
     private String message = "";
     private boolean finalRound = false; // set true once any player hits win score
     private boolean gameOver = false;
+    private boolean pendingDiscard = false; // true when current player must discard to ≤10 coins
 
     public Game() {
         config = new GameConfig();
@@ -269,5 +270,13 @@ public class Game implements Serializable {
 
     public boolean isFinalRound() {
         return finalRound;
+    }
+
+    public boolean isPendingDiscard() {
+        return pendingDiscard;
+    }
+
+    public void setPendingDiscard(boolean pendingDiscard) {
+        this.pendingDiscard = pendingDiscard;
     }
 }

@@ -116,8 +116,35 @@ public class AIPlayer implements Serializable {
         boolean ok = player.escortCard(best);
         if (ok) {
             game.replenishCard(bestSlot);
+            // Auto-discard if gold coin pushed over 10
+            while (player.getTotalCoins() > 10) {
+                autoDiscard(game, player);
+            }
         }
         return ok;
+    }
+
+    /**
+     * Discard the least-needed coin (prefer colors not needed for any target card).
+     */
+    private static void autoDiscard(Game game, Player player) {
+        int[] need = computeNeeds(game, player);
+        // Pick the color with most excess (held minus needed)
+        int bestIdx = -1;
+        int bestExcess = Integer.MIN_VALUE;
+        for (int i = 0; i < 6; i++) {
+            if (player.getMycoins()[i] <= 0)
+                continue;
+            int n = (i < 5) ? need[i] : 0; // gold has no "need" score
+            int excess = player.getMycoins()[i] - n;
+            if (excess > bestExcess) {
+                bestExcess = excess;
+                bestIdx = i;
+            }
+        }
+        if (bestIdx >= 0) {
+            player.discardCoin(GemColor.fromIndex(bestIdx).name());
+        }
     }
 
     // -------------------------------------------------------------------------
