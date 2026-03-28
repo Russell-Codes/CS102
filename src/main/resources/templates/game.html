@@ -6,14 +6,11 @@
     <link rel="stylesheet" th:href="@{/css/style.css}" />
   </head>
   <body>
-    <!-- Message Banner -->
     <div
       class="message-banner"
       th:if="${game.message != null and !game.message.isEmpty()}"
       th:text="${game.message}"
     ></div>
-
-    <!-- Final Round Warning -->
     <div
       class="message-banner"
       style="background: #b8860b"
@@ -23,18 +20,21 @@
     </div>
 
     <div class="game-layout">
-      <!-- ===== LEFT: Board ===== -->
       <div class="board-section">
-        <!-- Turn indicator -->
         <div class="turn-indicator">
           <span>Current Turn: </span>
           <strong th:text="${game.currentPlayer.name}">Player</strong>
-          <span style="float: right; color: #c0a07a">
-            Target: <strong th:text="${game.winScore}">15</strong> prestige
-          </span>
+          <span
+            style="color: #c8a000; margin-left: 10px"
+            th:if="${game.currentPlayer.uuid == myUuid}"
+            >(Your Turn!)</span
+          >
+          <span style="float: right; color: #c0a07a"
+            >Target:
+            <strong th:text="${game.winScore}">15</strong> prestige</span
+          >
         </div>
 
-        <!-- Noble Tiles -->
         <div class="nobles-row">
           <h3>Nobles</h3>
           <div class="nobles-container">
@@ -52,7 +52,6 @@
           </div>
         </div>
 
-        <!-- Card Grid: Tiers 3 → 1 (highest tier at top) -->
         <div class="card-grid" th:each="tier : ${#numbers.sequence(3, 1, -1)}">
           <div
             class="tier-label"
@@ -61,21 +60,15 @@
             Tier
           </div>
           <div class="tier-row">
-            <!-- Deck back -->
             <div
               class="card deck-back"
               th:text="'×' + ${game.getDeckSize(tier)}"
             ></div>
-
-            <!-- 4 visible cards for this tier -->
             <div
               th:each="card, stat : ${game.getVisibleCardsForTier(tier)}"
               th:with="slotIndex=${(tier - 1) * 4 + stat.index}"
             >
-              <!-- Empty slot -->
               <div class="card card-empty" th:if="${card == null}">—</div>
-
-              <!-- Card -->
               <div
                 class="card"
                 th:if="${card != null}"
@@ -96,9 +89,12 @@
                     th:text="${card.cost[i]}"
                   ></span>
                 </div>
-                <div class="card-actions" th:if="${!game.pendingDiscard}">
+                <div
+                  class="card-actions"
+                  th:if="${!game.pendingDiscard and game.currentPlayer.uuid == myUuid}"
+                >
                   <form
-                    th:action="@{/game/buy-card}"
+                    th:action="@{|/game/${roomId}/buy-card|}"
                     method="post"
                     style="display: inline"
                   >
@@ -110,7 +106,7 @@
                     <button type="submit" class="btn-small btn-buy">Buy</button>
                   </form>
                   <form
-                    th:action="@{/game/reserve-card}"
+                    th:action="@{|/game/${roomId}/reserve-card|}"
                     method="post"
                     style="display: inline"
                   >
@@ -129,12 +125,16 @@
           </div>
         </div>
 
-        <!-- Discard Panel (shown when player must discard to ≤10 coins) -->
-        <div class="coin-bank" th:if="${game.pendingDiscard}">
+        <div
+          class="coin-bank"
+          th:if="${game.pendingDiscard and game.currentPlayer.uuid == myUuid}"
+        >
           <h3>Discard Coins</h3>
           <p class="coin-hint">
-            You have <strong th:text="${game.currentPlayer.totalCoins}">11</strong> coins.
-            Discard <strong th:text="${game.currentPlayer.totalCoins - 10}">1</strong> to get back to 10.
+            You have
+            <strong th:text="${game.currentPlayer.totalCoins}">11</strong>
+            coins. Discard
+            <strong th:text="${game.currentPlayer.totalCoins - 10}">1</strong>.
           </p>
           <div class="coins-row">
             <div
@@ -143,133 +143,143 @@
               th:class="'coin-spinner gem-' + ${game.gemColorName(i)}"
             >
               <span th:text="${game.gemColorName(i)}">white</span>
-              <span class="coin-count" th:text="'×' + ${game.currentPlayer.mycoins[i]}">×3</span>
-              <form th:action="@{/game/discard-coins}" method="post" style="display:inline">
-                <input type="hidden" name="color" th:value="${game.gemColorName(i).toUpperCase()}" />
-                <button type="submit" class="btn-small btn-reserve">Discard</button>
+              <span
+                class="coin-count"
+                th:text="'×' + ${game.currentPlayer.mycoins[i]}"
+              ></span>
+              <form
+                th:action="@{|/game/${roomId}/discard-coins|}"
+                method="post"
+                style="display: inline"
+              >
+                <input
+                  type="hidden"
+                  name="color"
+                  th:value="${game.gemColorName(i).toUpperCase()}"
+                />
+                <button type="submit" class="btn-small btn-reserve">
+                  Discard
+                </button>
               </form>
             </div>
           </div>
         </div>
+        <div
+          class="coin-bank"
+          th:if="${game.pendingDiscard and game.currentPlayer.uuid != myUuid}"
+        >
+          <p style="color: #c8a000; font-weight: bold; margin: 10px 0">
+            Waiting for <span th:text="${game.currentPlayer.name}"></span> to
+            discard...
+          </p>
+        </div>
 
-        <!-- Coin Bank -->
         <div class="coin-bank" th:if="${!game.pendingDiscard}">
           <h3>Coin Bank</h3>
-          <p class="coin-hint">
-            Take up to 3 different gems, or 2 of the same (bank needs ≥4).
-          </p>
-          <form th:action="@{/game/take-coins}" method="post">
+          <form th:action="@{|/game/${roomId}/take-coins|}" method="post">
             <div class="coins-row">
-              <!-- White -->
-              <div th:class="'coin-spinner gem-' + ${game.gemColorName(0)}">
-                <span>White</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[0]}"
-                  >×4</span
-                >
+              <div
+                th:each="i : ${#numbers.sequence(0, 4)}"
+                th:class="'coin-spinner gem-' + ${game.gemColorName(i)}"
+              >
+                <span
+                  th:text="${game.gemColorName(i).substring(0,1).toUpperCase() + game.gemColorName(i).substring(1)}"
+                ></span>
+                <span
+                  class="coin-count"
+                  th:text="'×' + ${game.bankCoins[i]}"
+                ></span>
                 <input
                   type="number"
-                  name="white"
+                  th:name="${game.gemColorName(i)}"
                   min="0"
                   max="2"
                   value="0"
-                  th:disabled="${game.bankCoins[0] == 0}"
+                  th:disabled="${game.bankCoins[i] == 0 or game.currentPlayer.uuid != myUuid}"
                   class="coin-num"
                 />
               </div>
-              <!-- Blue -->
-              <div th:class="'coin-spinner gem-' + ${game.gemColorName(1)}">
-                <span>Blue</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[1]}"
-                  >×4</span
-                >
-                <input
-                  type="number"
-                  name="blue"
-                  min="0"
-                  max="2"
-                  value="0"
-                  th:disabled="${game.bankCoins[1] == 0}"
-                  class="coin-num"
-                />
-              </div>
-              <!-- Green -->
-              <div th:class="'coin-spinner gem-' + ${game.gemColorName(2)}">
-                <span>Green</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[2]}"
-                  >×4</span
-                >
-                <input
-                  type="number"
-                  name="green"
-                  min="0"
-                  max="2"
-                  value="0"
-                  th:disabled="${game.bankCoins[2] == 0}"
-                  class="coin-num"
-                />
-              </div>
-              <!-- Red -->
-              <div th:class="'coin-spinner gem-' + ${game.gemColorName(3)}">
-                <span>Red</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[3]}"
-                  >×4</span
-                >
-                <input
-                  type="number"
-                  name="red"
-                  min="0"
-                  max="2"
-                  value="0"
-                  th:disabled="${game.bankCoins[3] == 0}"
-                  class="coin-num"
-                />
-              </div>
-              <!-- Black -->
-              <div th:class="'coin-spinner gem-' + ${game.gemColorName(4)}">
-                <span>Black</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[4]}"
-                  >×4</span
-                >
-                <input
-                  type="number"
-                  name="black"
-                  min="0"
-                  max="2"
-                  value="0"
-                  th:disabled="${game.bankCoins[4] == 0}"
-                  class="coin-num"
-                />
-              </div>
-              <!-- Gold (display only) -->
               <div class="coin-spinner gem-gold">
-                <span>Gold</span>
-                <span class="coin-count" th:text="'×' + ${game.bankCoins[5]}"
-                  >×5</span
-                >
+                <span>Gold</span
+                ><span
+                  class="coin-count"
+                  th:text="'×' + ${game.bankCoins[5]}"
+                ></span>
               </div>
             </div>
-            <button type="submit" class="btn-primary">Take Coins</button>
+            <button
+              type="submit"
+              class="btn-primary"
+              th:if="${game.currentPlayer.uuid == myUuid}"
+            >
+              Take Coins
+            </button>
+            <p
+              style="color: #c8a000; font-weight: bold; margin-top: 10px"
+              th:if="${game.currentPlayer.uuid != myUuid}"
+            >
+              Waiting for <span th:text="${game.currentPlayer.name}"></span>...
+            </p>
           </form>
         </div>
       </div>
 
-      <!-- ===== RIGHT: Player Panels ===== -->
       <div class="players-section">
         <div
           th:each="p, pStat : ${game.players}"
           th:class="${pStat.index == game.nowTurn} ? 'player-panel active-player' : 'player-panel'"
+          th:style="${p.ejected} ? 'opacity: 0.5;' : ''"
         >
+          <div
+            th:if="${myUuid == game.hostUuid and p.uuid != myUuid and p.isDisconnected() and !p.ejected}"
+            style="
+              background: #8b0000;
+              padding: 5px;
+              margin-bottom: 5px;
+              border-radius: 4px;
+              text-align: center;
+            "
+          >
+            <p style="font-size: 0.75rem; color: white; margin-bottom: 5px">
+              Player disconnected!
+            </p>
+            <form
+              th:action="@{|/game/${roomId}/host-action/ai|}"
+              method="post"
+              style="display: inline"
+            >
+              <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+              <button type="submit" class="btn-small" style="background: #333">
+                AI Takeover
+              </button>
+            </form>
+            <form
+              th:action="@{|/game/${roomId}/host-action/eject|}"
+              method="post"
+              style="display: inline"
+            >
+              <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+              <button type="submit" class="btn-small" style="background: #000">
+                Eject
+              </button>
+            </form>
+          </div>
+
           <h3>
             <span th:text="${p.name}">Player</span>
-            <span th:if="${p.ai}" style="font-size: 0.75rem; color: #c0a07a">
-              (CPU)</span
+            <span
+              th:if="${p.uuid == myUuid}"
+              style="color: #c8a000; font-size: 0.8rem"
+              >(You)</span
+            >
+            <span th:if="${p.ai}" style="font-size: 0.75rem; color: #c0a07a"
+              >(CPU)</span
             >
           </h3>
           <div class="player-score">
             Score: <strong th:text="${p.score}">0</strong>
           </div>
 
-          <!-- Coins held -->
           <div class="player-coins">
             <h4>Coins</h4>
             <span
@@ -280,8 +290,6 @@
             ></span>
             <span th:if="${p.getTotalCoins() == 0}">None</span>
           </div>
-
-          <!-- Card bonuses -->
           <div class="player-bonuses">
             <h4>Card Bonuses</h4>
             <span
@@ -291,20 +299,19 @@
               th:text="${game.gemColorName(i).substring(0,1).toUpperCase() + ': +' + p.mycards[i]}"
             ></span>
             <span
-              th:if="${p.mycards[0] + p.mycards[1] + p.mycards[2] + p.mycards[3] + p.mycards[4] == 0}"
+              th:if="${p.mycards[0]+p.mycards[1]+p.mycards[2]+p.mycards[3]+p.mycards[4] == 0}"
               >None</span
             >
           </div>
 
-          <!-- Reserved cards -->
           <div class="player-reserved" th:if="${!p.reservedCards.isEmpty()}">
-            <h4>Reserved Cards</h4>
+            <h4>Reserved</h4>
             <div
               th:each="rc, rcStat : ${p.reservedCards}"
               th:class="'card card-small gem-' + ${rc.gemColor.name().toLowerCase()}"
             >
-              <span class="card-vp" th:text="${rc.value}">0</span>
-              <span
+              <span class="card-vp" th:text="${rc.value}"></span
+              ><span
                 class="card-gem"
                 th:text="${rc.gemColor.name().toLowerCase()}"
               ></span>
@@ -316,14 +323,12 @@
                   th:text="${rc.cost[i]}"
                 ></span>
               </div>
-              <!-- Buy from reserve: only active player's reserved cards show buy button -->
               <form
-                th:if="${pStat.index == game.nowTurn and !game.pendingDiscard}"
-                th:action="@{/game/buy-card}"
+                th:if="${pStat.index == game.nowTurn and !game.pendingDiscard and game.currentPlayer.uuid == myUuid}"
+                th:action="@{|/game/${roomId}/buy-card|}"
                 method="post"
                 style="display: inline"
               >
-                <!-- Encode as negative index: -(rcStat.index + 1) -->
                 <input
                   type="hidden"
                   name="cardIndex"
@@ -336,6 +341,24 @@
         </div>
       </div>
     </div>
-    <!-- end game-layout -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script th:inline="javascript">
+      var roomId = /*[[${roomId}]]*/ "default-room";
+
+      // Keep connection alive
+      setInterval(function () {
+        fetch("/game/" + roomId + "/ping", { method: "POST" });
+      }, 5000);
+
+      var stompClient = Stomp.over(new SockJS("/splendor-websocket"));
+      stompClient.debug = null;
+      stompClient.connect({}, function () {
+        stompClient.subscribe("/topic/room/" + roomId, function () {
+          window.location.reload();
+        });
+      });
+    </script>
   </body>
 </html>

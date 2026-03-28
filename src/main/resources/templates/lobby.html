@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Splendor — Waiting Room</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" />
+  </head>
+  <body>
+    <div class="login-container" style="max-width: 600px">
+      <h1>Room: <span style="color: white" th:text="${roomId}"></span></h1>
+      <h2 style="margin-bottom: 20px">
+        Waiting for players... (<span th:text="${game.players.size()}"></span
+        >/<span th:text="${game.capacity}"></span>)
+      </h2>
+
+      <div
+        style="
+          text-align: left;
+          background: #1a0a00;
+          padding: 15px;
+          border-radius: 6px;
+          border: 1px solid #8b6914;
+          margin-bottom: 20px;
+        "
+      >
+        <h3 style="color: #c8a000; margin-bottom: 10px">Players</h3>
+        <ul>
+          <li th:each="p : ${game.players}" style="margin-bottom: 5px">
+            <strong th:text="${p.name}"></strong>
+            <span
+              th:if="${p.uuid == game.hostUuid}"
+              style="color: #c0a07a; font-size: 0.8rem"
+              >(Host)</span
+            >
+            <span th:if="${p.ready}" style="color: #2a9d2a; float: right"
+              >READY ✓</span
+            >
+            <span th:if="${!p.ready}" style="color: #c43030; float: right"
+              >Waiting...</span
+            >
+          </li>
+        </ul>
+        <p th:if="${game.players.isEmpty()}" style="color: #c0a07a">
+          No one is here yet.
+        </p>
+      </div>
+
+      <div>
+        <form
+          th:if="${me == null or !me.ready}"
+          th:action="@{|/lobby/${roomId}/ready|}"
+          method="post"
+          style="margin-bottom: 20px"
+        >
+          <div class="form-group">
+            <label for="playerName">Enter Your Name</label>
+            <input
+              type="text"
+              id="playerName"
+              name="playerName"
+              placeholder="Your Name"
+              required
+              maxlength="20"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn-primary"
+            style="background: #2a9d2a; width: 100%"
+          >
+            I'm Ready
+          </button>
+        </form>
+
+        <p
+          th:if="${me != null and me.ready}"
+          style="color: #c8a000; font-weight: bold; margin-bottom: 20px"
+        >
+          You are ready!
+        </p>
+      </div>
+
+      <div th:if="${myUuid == game.hostUuid}">
+        <form th:action="@{|/lobby/${roomId}/start|}" method="post">
+          <button
+            type="submit"
+            class="btn-primary"
+            th:disabled="${!allReady}"
+            style="width: 100%"
+          >
+            Start Game
+          </button>
+        </form>
+        <p style="font-size: 0.8rem; color: #c0a07a; margin-top: 10px">
+          Game can start when room is full and everyone is ready.
+        </p>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script th:inline="javascript">
+      var roomId = /*[[${roomId}]]*/ "default-room";
+      var stompClient = Stomp.over(new SockJS("/splendor-websocket"));
+      stompClient.debug = null;
+      stompClient.connect({}, function () {
+        stompClient.subscribe("/topic/room/" + roomId, function () {
+          window.location.reload();
+        });
+      });
+    </script>
+  </body>
+</html>
