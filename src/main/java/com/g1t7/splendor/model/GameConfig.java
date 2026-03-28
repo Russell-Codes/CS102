@@ -9,10 +9,10 @@ import java.util.Properties;
  */
 public class GameConfig implements Serializable {
 
-    private static final String CONFIG_PATH = "resources/config.properties";
+    private static final String CONFIG_PATH = "game/config.properties";
 
     private int winScore = 15;
-    private String cardFile = "resources/cards.csv";
+    private String cardFile = "game/cards.csv";
 
     // Gem counts by number of players (index 0 unused, 2–4 used)
     private int gems2Players = 4;
