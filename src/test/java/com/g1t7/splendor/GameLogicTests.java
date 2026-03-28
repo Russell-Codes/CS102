@@ -4,7 +4,6 @@ import com.g1t7.splendor.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -77,7 +76,7 @@ class GameLogicTests {
 
     @Test
     void csvLoads90Cards() {
-        List<Card> cards = CardData.buildDeck("resources/cards.csv");
+        List<Card> cards = CardData.buildDeck("game/cards.csv");
         assertEquals(90, cards.size(), "CSV should contain 90 cards");
     }
 

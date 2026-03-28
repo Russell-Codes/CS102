@@ -4,6 +4,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.core.io.ClassPathResource;
+
 /**
  * Loads development cards from an external CSV file specified in
  * config.properties.
@@ -23,12 +25,12 @@ public class CardData {
      */
     public static List<Card> buildDeck(String csvPath) {
         List<Card> deck = new ArrayList<>();
-        File file = new File(csvPath);
-        if (!file.exists()) {
-            System.err.println("[CardData] CSV not found at " + csvPath + " – using fallback deck");
-            return buildFallbackDeck();
-        }
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+
+        // Use ClassPathResource to read from the classpath (inside the JAR /
+        // src/main/resources)
+        try (InputStream is = new ClassPathResource(csvPath).getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
+
             String line;
             boolean headerSkipped = false;
             while ((line = br.readLine()) != null) {
@@ -60,50 +62,76 @@ public class CardData {
                 }
             }
         } catch (IOException e) {
-            System.err.println("[CardData] Error reading CSV: " + e.getMessage());
+            // This catches the FileNotFoundException if the resource isn't found in the
+            // classpath
+            System.err.println("[CardData] CSV not found at classpath:" + csvPath + " - using fallback deck");
             return buildFallbackDeck();
         }
+
         if (deck.isEmpty())
             return buildFallbackDeck();
+
         System.out.println("[CardData] Loaded " + deck.size() + " cards from " + csvPath);
         return deck;
     }
 
     /** Convenience overload using default path. */
     public static List<Card> buildDeck() {
-        return buildDeck("resources/cards.csv");
+        return buildDeck("game/cards.csv");
     }
 
     /**
-     * Minimal hardcoded deck (25 cards) used when the CSV is unavailable.
+     * Minimal hardcoded deck (90 cards) used when the CSV is unavailable.
      */
     private static List<Card> buildFallbackDeck() {
         List<Card> d = new ArrayList<>();
-        d.add(new Card(1, GemColor.WHITE, 0, new int[] { 0, 1, 1, 1, 1, 0 }));
-        d.add(new Card(1, GemColor.WHITE, 0, new int[] { 0, 0, 2, 0, 2, 0 }));
-        d.add(new Card(1, GemColor.BLUE, 0, new int[] { 1, 0, 1, 1, 1, 0 }));
-        d.add(new Card(1, GemColor.BLUE, 0, new int[] { 0, 0, 0, 2, 2, 0 }));
-        d.add(new Card(1, GemColor.GREEN, 0, new int[] { 1, 1, 0, 1, 1, 0 }));
-        d.add(new Card(1, GemColor.GREEN, 0, new int[] { 0, 2, 0, 0, 2, 0 }));
-        d.add(new Card(1, GemColor.RED, 0, new int[] { 1, 1, 1, 0, 1, 0 }));
-        d.add(new Card(1, GemColor.RED, 0, new int[] { 2, 0, 0, 0, 2, 0 }));
-        d.add(new Card(1, GemColor.BLACK, 0, new int[] { 1, 1, 1, 1, 0, 0 }));
-        d.add(new Card(1, GemColor.BLACK, 1, new int[] { 0, 0, 0, 4, 0, 0 }));
-        d.add(new Card(2, GemColor.WHITE, 1, new int[] { 0, 0, 3, 2, 2, 0 }));
-        d.add(new Card(2, GemColor.WHITE, 2, new int[] { 0, 0, 0, 5, 0, 0 }));
-        d.add(new Card(2, GemColor.BLUE, 1, new int[] { 0, 0, 2, 3, 2, 0 }));
-        d.add(new Card(2, GemColor.BLUE, 2, new int[] { 0, 0, 0, 0, 5, 0 }));
-        d.add(new Card(2, GemColor.GREEN, 1, new int[] { 2, 3, 0, 0, 2, 0 }));
-        d.add(new Card(2, GemColor.GREEN, 2, new int[] { 0, 5, 0, 0, 0, 0 }));
-        d.add(new Card(2, GemColor.RED, 1, new int[] { 2, 2, 0, 0, 3, 0 }));
-        d.add(new Card(2, GemColor.RED, 2, new int[] { 5, 0, 0, 0, 0, 0 }));
-        d.add(new Card(2, GemColor.BLACK, 1, new int[] { 3, 0, 2, 0, 2, 0 }));
-        d.add(new Card(2, GemColor.BLACK, 3, new int[] { 0, 0, 0, 3, 3, 0 }));
-        d.add(new Card(3, GemColor.WHITE, 4, new int[] { 3, 0, 0, 3, 6, 0 }));
-        d.add(new Card(3, GemColor.BLUE, 4, new int[] { 0, 0, 3, 6, 3, 0 }));
-        d.add(new Card(3, GemColor.GREEN, 4, new int[] { 3, 6, 0, 0, 3, 0 }));
-        d.add(new Card(3, GemColor.RED, 4, new int[] { 0, 3, 6, 3, 0, 0 }));
-        d.add(new Card(3, GemColor.BLACK, 5, new int[] { 0, 0, 0, 7, 0, 0 }));
+
+        // tier, points, whiteCost, blueCost, greenCost, redCost, blackCost
+        int[][] templates = {
+                // Tier 1 (8 templates)
+                { 1, 0, 0, 1, 1, 1, 1 },
+                { 1, 0, 0, 2, 1, 0, 0 },
+                { 1, 0, 0, 3, 0, 0, 0 },
+                { 1, 0, 0, 2, 2, 0, 1 },
+                { 1, 0, 3, 1, 0, 0, 1 },
+                { 1, 0, 0, 0, 2, 0, 2 },
+                { 1, 1, 0, 0, 4, 0, 0 },
+                { 1, 1, 0, 1, 2, 1, 1 },
+
+                // Tier 2 (6 templates)
+                { 2, 1, 3, 2, 2, 0, 0 },
+                { 2, 2, 0, 0, 0, 5, 0 },
+                { 2, 2, 0, 0, 1, 4, 2 },
+                { 2, 2, 2, 3, 0, 3, 0 },
+                { 2, 3, 6, 0, 0, 0, 0 },
+                { 2, 1, 2, 0, 4, 0, 1 },
+
+                // Tier 3 (4 templates)
+                { 3, 3, 0, 3, 3, 5, 3 },
+                { 3, 4, 7, 0, 0, 0, 0 },
+                { 3, 4, 6, 3, 3, 0, 0 },
+                { 3, 5, 3, 0, 0, 0, 7 }
+        };
+
+        // generate the 90 cards
+        for (int[] t : templates) {
+            int tier = t[0];
+            int points = t[1];
+
+            // base costs from the template
+            int w = t[2]; // White
+            int u = t[3]; // Blue
+            int g = t[4]; // Green
+            int r = t[5]; // Red
+            int b = t[6]; // Black
+
+            d.add(new Card(tier, GemColor.WHITE, points, new int[] { w, u, g, r, b, 0 }));
+            d.add(new Card(tier, GemColor.BLUE, points, new int[] { b, w, u, g, r, 0 }));
+            d.add(new Card(tier, GemColor.GREEN, points, new int[] { r, b, w, u, g, 0 }));
+            d.add(new Card(tier, GemColor.RED, points, new int[] { g, r, b, w, u, 0 }));
+            d.add(new Card(tier, GemColor.BLACK, points, new int[] { u, g, r, b, w, 0 }));
+        }
+
         return d;
     }
 }
