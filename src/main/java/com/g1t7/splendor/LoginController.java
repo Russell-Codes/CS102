@@ -1,17 +1,14 @@
 package com.g1t7.splendor;
 
-import com.g1t7.splendor.model.AIPlayer;
 import com.g1t7.splendor.model.Game;
-import com.g1t7.splendor.model.Login;
 import com.g1t7.splendor.model.Player;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
-
-import java.util.Set;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.util.UUID;
 
 /**
  * LoginController resolves the entry point of the Splendor Web Application.
@@ -28,9 +25,21 @@ public class LoginController {
      * @param model The Spring UI Model used to bind the empty Login object.
      * @return The thymeleaf template name 'login'.
      */
+    @Autowired
+    private GameManager gameManager;
+
+    private String ensureUuid(HttpSession session) {
+        String uuid = (String) session.getAttribute("userUuid");
+        if (uuid == null) {
+            uuid = UUID.randomUUID().toString();
+            session.setAttribute("userUuid", uuid);
+        }
+        return uuid;
+    }
+
     @GetMapping("/")
-    public String showLogin(Model model) {
-        model.addAttribute("login", new Login());
+    public String showLogin(HttpSession session) {
+        ensureUuid(session);
         return "login";
     }
 
@@ -47,43 +56,30 @@ public class LoginController {
      * @return A PRG redirect string dispatching the client to the active game board mapping.
      */
     @PostMapping("/start")
-    public String startGame(@ModelAttribute Login login, HttpSession session) {
-        int numPlayers = Math.max(2, Math.min(4, login.getNumPlayers()));
-        Set<String> aiSet = login.getAiPlayers() != null
-                ? Set.copyOf(login.getAiPlayers())
-                : Set.of();
-
-        String[] rawNames = {
-            login.getPlay1(),
-            login.getPlay2(),
-            login.getPlay3(),
-            login.getPlay4()
-        };
+    public String createLobby(@RequestParam int numPlayers,
+            @RequestParam String hostName,
+            HttpSession session) {
+        String hostUuid = ensureUuid(session);
 
         Game game = new Game();
+        game.setCapacity(Math.max(2, Math.min(4, numPlayers)));
+        game.setStarted(false);
+        game.setHostUuid(hostUuid);
 
-        // Scans the sanitized player 
-        // configuration array to provision new structural Player model instances. Applies default 
-        // names if skipped, identifies AI actors via the Set lookup, and appends a visual robot flag.
-        for (int i = 0; i < numPlayers; i++) {
-            String defaultName = "Player " + (i + 1);
-            String name = (rawNames[i] == null || rawNames[i].isBlank()) ? defaultName : rawNames[i].trim();
-            
-            boolean isAi = aiSet.contains("ai" + (i + 1));
-            if (isAi) name = name + " \uD83E\uDD16"; // robot emoji suffix for AI visually distinguishing bots in the View layer
-            Player p = new Player(game, name, isAi);
-            game.getPlayers().add(p);
-        }
 
-        game.variableInit();
-        session.setAttribute("game", game);
+        // NEW: Automatically add the host as the first player in the lobby
+        Player host = new Player(game, hostName.trim());
+        host.setUuid(hostUuid);
+        host.setReady(true); // Host is ready by default since they just set up the game
+        game.getPlayers().add(host);
 
-        // If the first player is AI, make them move immediately
-        if (game.getCurrentPlayer().isAi()) {
-            AIPlayer.takeTurn(game, game.getCurrentPlayer());
-            game.changeTurns();
-        }
+        String roomId = gameManager.createGame(game);
+        return "redirect:/lobby/" + roomId;
+    }
 
-        return "redirect:/game";
+    @GetMapping("/join")
+    public String joinLobby(@RequestParam String roomId, HttpSession session) {
+        ensureUuid(session);
+        return "redirect:/lobby/" + roomId.toUpperCase();
     }
 }

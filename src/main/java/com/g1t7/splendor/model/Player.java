@@ -13,13 +13,16 @@ public class Player implements Serializable {
     private boolean ai = false;
     private String name;
     private int score;
-    // mycoins[i] = coins held, indexed by GemColor ordinal (0=WHITE..5=GOLD)
     private int[] mycoins = new int[6];
-    // mycards[i] = card bonus (purchased cards) per GemColor ordinal
-    // (0=WHITE..4=BLACK)
     private int[] mycards = new int[5];
     private List<Card> reservedCards = new ArrayList<>();
     private Stack<Card> cards = new Stack<>();
+
+    // --- NEW MULTIPLAYER FIELDS ---
+    private String uuid;
+    private boolean isReady = false;
+    private boolean isEjected = false;
+    private long lastHeartbeat = System.currentTimeMillis();
 
     public Player() {
     }
@@ -35,24 +38,23 @@ public class Player implements Serializable {
         this.ai = ai;
     }
 
-    // -------------------------------------------------------------------------
-    // Game actions
-    // -------------------------------------------------------------------------
+    // --- HELPER FOR DISCONNECTS ---
+    public boolean isDisconnected() {
+        // If it's an AI or they've been ejected, they technically aren't disconnected
+        if (ai || isEjected)
+            return false;
+        // Considered disconnected if no ping for 30 seconds
+        return (System.currentTimeMillis() - lastHeartbeat) > 30000;
+    }
 
-    /**
-     * Attempt to buy a card. Auto-deducts coins: colored first, gold covers
-     * shortfall.
-     * return true if purchase succeeded
-     */
+    // --- EXISTING GAME LOGIC ---
     public boolean buyCard(Card card) {
         int[] bankCoins = game.getBankCoins();
-        // Compute effective cost after card bonuses reduce it
         int[] effectiveCost = new int[5];
         for (int i = 0; i < 5; i++) {
             effectiveCost[i] = Math.max(0, card.getCost()[i] - mycards[i]);
         }
 
-        // Check if player can afford (colored coins + gold for shortfall)
         int goldNeeded = 0;
         for (int i = 0; i < 5; i++) {
             int shortfall = Math.max(0, effectiveCost[i] - mycoins[i]);
@@ -63,7 +65,6 @@ public class Player implements Serializable {
             return false;
         }
 
-        // Deduct coins
         int goldSpent = 0;
         for (int i = 0; i < 5; i++) {
             int paid = Math.min(mycoins[i], effectiveCost[i]);
@@ -75,25 +76,15 @@ public class Player implements Serializable {
         mycoins[5] -= goldSpent;
         bankCoins[5] += goldSpent;
 
-        // Record purchase
         cards.push(card);
         mycards[card.getGemColor().ordinal()]++;
         score += card.getValue();
         card.setReserved(false);
 
-        // Check for noble visits
         checkNobles(game.getActiveNobles());
-
         return true;
     }
 
-    /**
-     * Take coins from the bank according to Splendor rules.
-     * selectedColors: list of GemColor strings for coins to take.
-     * Rule A: 2 coins of same color → bank must have ≥ 4 of that color.
-     * Rule B: up to 3 different colors → bank has ≥ 1 each.
-     * Player coin total must not exceed 10.
-     */
     public boolean exchangeCoin(List<String> selectedColors) {
         if (selectedColors == null || selectedColors.isEmpty() || selectedColors.size() > 3) {
             game.setMessage("Select 1-3 coins.");
@@ -103,13 +94,12 @@ public class Player implements Serializable {
         int[] bankCoins = game.getBankCoins();
         int[] toTake = new int[6];
 
-        // Tally requested coins
         for (String colorName : selectedColors) {
             GemColor gc;
             try {
                 gc = GemColor.valueOf(colorName.toUpperCase());
             } catch (IllegalArgumentException e) {
-                game.setMessage("Invalid gem color: " + colorName);
+                game.setMessage("Invalid gem color.");
                 return false;
             }
             if (gc == GemColor.GOLD) {
@@ -119,9 +109,7 @@ public class Player implements Serializable {
             toTake[gc.ordinal()]++;
         }
 
-        // Validate rule
         if (selectedColors.size() == 2) {
-            // Must be same color, bank ≥ 4
             int distinctCount = 0;
             int sameColorIdx = -1;
             for (int i = 0; i < 5; i++) {
@@ -139,7 +127,6 @@ public class Player implements Serializable {
                 return false;
             }
         } else {
-            // 1 or 3 coins: all different colors, bank ≥ 1 each
             for (int i = 0; i < 5; i++) {
                 if (toTake[i] > 1) {
                     game.setMessage("Select different colors (or same color for 2-coin take).");
@@ -152,7 +139,6 @@ public class Player implements Serializable {
             }
         }
 
-        // Apply
         for (int i = 0; i < 5; i++) {
             mycoins[i] += toTake[i];
             bankCoins[i] -= toTake[i];
@@ -160,11 +146,6 @@ public class Player implements Serializable {
         return true;
     }
 
-    /**
-     * Reserve a card (from the visible board or deck).
-     * 
-     * @return true if reservation succeeded
-     */
     public boolean escortCard(Card card) {
         if (reservedCards.size() >= 3) {
             game.setMessage("You can only reserve up to 3 cards.");
@@ -172,7 +153,6 @@ public class Player implements Serializable {
         }
         card.setReserved(true);
         reservedCards.add(card);
-        // Award gold coin if available
         if (game.getBankCoins()[GemColor.GOLD.ordinal()] > 0) {
             mycoins[GemColor.GOLD.ordinal()]++;
             game.getBankCoins()[GemColor.GOLD.ordinal()]--;
@@ -180,9 +160,6 @@ public class Player implements Serializable {
         return true;
     }
 
-    /**
-     * Check if any active noble's requirements are satisfied; award first match.
-     */
     public void checkNobles(List<Noble> nobles) {
         if (nobles == null)
             return;
@@ -192,7 +169,7 @@ public class Player implements Serializable {
             if (noble.isSatisfiedBy(mycards)) {
                 score += noble.getVictoryPoints();
                 it.remove();
-                break; // one noble per turn
+                break;
             }
         }
     }
@@ -204,32 +181,22 @@ public class Player implements Serializable {
         return total;
     }
 
-    /**
-     * Discard one coin of the given color back to the bank.
-     * Returns true if successful.
-     */
     public boolean discardCoin(String color) {
         GemColor gc;
         try {
             gc = GemColor.valueOf(color.toUpperCase());
         } catch (IllegalArgumentException e) {
-            game.setMessage("Invalid gem color: " + color);
             return false;
         }
         int idx = gc.ordinal();
-        if (mycoins[idx] <= 0) {
-            game.setMessage("You don't have any " + color.toLowerCase() + " coins to discard.");
+        if (mycoins[idx] <= 0)
             return false;
-        }
         mycoins[idx]--;
         game.getBankCoins()[idx]++;
         return true;
     }
 
-    // -------------------------------------------------------------------------
-    // Getters / Setters
-    // -------------------------------------------------------------------------
-
+    // --- GETTERS AND SETTERS ---
     public Game getGame() {
         return game;
     }
@@ -292,5 +259,37 @@ public class Player implements Serializable {
 
     public Stack<Card> getCards() {
         return cards;
+    }
+
+    public String getUuid() {
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
+    }
+
+    public boolean isReady() {
+        return isReady;
+    }
+
+    public void setReady(boolean ready) {
+        isReady = ready;
+    }
+
+    public boolean isEjected() {
+        return isEjected;
+    }
+
+    public void setEjected(boolean ejected) {
+        isEjected = ejected;
+    }
+
+    public long getLastHeartbeat() {
+        return lastHeartbeat;
+    }
+
+    public void setLastHeartbeat(long lastHeartbeat) {
+        this.lastHeartbeat = lastHeartbeat;
     }
 }
