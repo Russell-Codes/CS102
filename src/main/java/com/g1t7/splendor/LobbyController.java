@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Controller
 @RequestMapping("/lobby/{roomId}")
 public class LobbyController {
@@ -22,26 +24,32 @@ public class LobbyController {
     public String showLobby(@PathVariable String roomId, Model model, HttpSession session) {
         Game game = gameManager.getGame(roomId);
         if (game == null)
-            return "redirect:/";
-        if (game.isStarted())
-            return "redirect:/game/" + roomId;
+            return "redirect:/?error=notfound";
 
         String myUuid = (String) session.getAttribute("userUuid");
-
-        // 1. Find the player object for the current user safely in Java
         Player me = game.getPlayers().stream()
                 .filter(p -> p.getUuid() != null && p.getUuid().equals(myUuid))
                 .findFirst().orElse(null);
 
-        // 2. Pre-calculate if the host is allowed to click "Start"
+        // Direct URL Hacking Bouncer
+        if (me == null && game.getPlayers().size() >= game.getCapacity()) {
+            return "redirect:/?error=full";
+        }
+        if (me == null && game.isStarted()) {
+            return "redirect:/?error=started";
+        }
+
+        if (game.isStarted())
+            return "redirect:/game/" + roomId;
+
         boolean allReady = game.getPlayers().size() == game.getCapacity() &&
                 game.getPlayers().stream().allMatch(Player::isReady);
 
         model.addAttribute("game", game);
         model.addAttribute("roomId", roomId);
         model.addAttribute("myUuid", myUuid);
-        model.addAttribute("me", me); // Expose to Thymeleaf
-        model.addAttribute("allReady", allReady); // Expose to Thymeleaf
+        model.addAttribute("me", me);
+        model.addAttribute("allReady", allReady);
 
         return "lobby";
     }
@@ -69,6 +77,35 @@ public class LobbyController {
 
         me.setReady(true);
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        return "redirect:/lobby/" + roomId;
+    }
+
+    @PostMapping("/add-ai")
+    public String addAi(@PathVariable String roomId, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        String myUuid = (String) session.getAttribute("userUuid");
+
+        if (game != null && game.getHostUuid().equals(myUuid) && game.getPlayers().size() < game.getCapacity()) {
+            int aiCount = (int) game.getPlayers().stream().filter(Player::isAi).count() + 1;
+            Player aiPlayer = new Player(game, "CPU " + aiCount, true);
+            aiPlayer.setUuid(UUID.randomUUID().toString()); // So we can target it for removal
+            aiPlayer.setReady(true);
+
+            game.getPlayers().add(aiPlayer);
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        }
+        return "redirect:/lobby/" + roomId;
+    }
+
+    @PostMapping("/remove-ai")
+    public String removeAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        String myUuid = (String) session.getAttribute("userUuid");
+
+        if (game != null && game.getHostUuid().equals(myUuid)) {
+            game.getPlayers().removeIf(p -> p.isAi() && p.getUuid().equals(targetUuid));
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        }
         return "redirect:/lobby/" + roomId;
     }
 

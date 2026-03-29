@@ -8,26 +8,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
 import java.util.UUID;
 
-/**
- * LoginController resolves the entry point of the Splendor Web Application.
- * As a Spring MVC Controller, it handles initial routing before a game session begins,
- * parsing player configurations and seeding the primary HTTP Session with game state.
- */
 @Controller
 public class LoginController {
 
-    /**
-     * Resolves the root URI mapping ('/') and delivers the initial login interface.
-     * Injects a clean Login Data Transfer Object (DTO) into the model to capture user inputs.
-     *
-     * @param model The Spring UI Model used to bind the empty Login object.
-     * @return The thymeleaf template name 'login'.
-     */
     @Autowired
     private GameManager gameManager;
 
+    // Helper to ensure every visitor has a unique ID
     private String ensureUuid(HttpSession session) {
         String uuid = (String) session.getAttribute("userUuid");
         if (uuid == null) {
@@ -43,20 +33,8 @@ public class LoginController {
         return "login";
     }
 
-    /**
-     * Bootstraps the core Game model based on the captured login configuration setup.
-     * Ensures strict mathematical bounds on the number of players (2 to 4), dynamically 
-     * resolves human versus AI assignments, initializes the board, and attaches the entire 
-     * constructed context to the user's volatile HttpSession.
-     *
-     * Automatically triggers the core turn processing loop if Player 1 is resolved as an AI.
-     *
-     * @param login   The fully hydrated backend mapping of the frontend HTML form.
-     * @param session The contextual HTTP session initialized for the connecting browser.
-     * @return A PRG redirect string dispatching the client to the active game board mapping.
-     */
     @PostMapping("/start")
-    public String createLobby(@RequestParam int numPlayers,
+    public String createLobby(@RequestParam(defaultValue = "2") int numPlayers,
             @RequestParam String hostName,
             HttpSession session) {
         String hostUuid = ensureUuid(session);
@@ -66,11 +44,10 @@ public class LoginController {
         game.setStarted(false);
         game.setHostUuid(hostUuid);
 
-
-        // NEW: Automatically add the host as the first player in the lobby
+        // Host is automatically added as the first player and readied up
         Player host = new Player(game, hostName.trim());
         host.setUuid(hostUuid);
-        host.setReady(true); // Host is ready by default since they just set up the game
+        host.setReady(true);
         game.getPlayers().add(host);
 
         String roomId = gameManager.createGame(game);
@@ -79,7 +56,25 @@ public class LoginController {
 
     @GetMapping("/join")
     public String joinLobby(@RequestParam String roomId, HttpSession session) {
-        ensureUuid(session);
+        String myUuid = ensureUuid(session);
+        Game game = gameManager.getGame(roomId);
+
+        // BOUNCER CHECKS
+        if (game == null) {
+            return "redirect:/?error=notfound";
+        }
+
+        boolean alreadyInRoom = game.getPlayers().stream()
+                .anyMatch(p -> p.getUuid() != null && p.getUuid().equals(myUuid));
+
+        if (!alreadyInRoom && game.getPlayers().size() >= game.getCapacity()) {
+            return "redirect:/?error=full";
+        }
+
+        if (!alreadyInRoom && game.isStarted()) {
+            return "redirect:/?error=started";
+        }
+
         return "redirect:/lobby/" + roomId.toUpperCase();
     }
 }

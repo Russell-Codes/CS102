@@ -29,11 +29,41 @@
     </style>
   </head>
   <body>
+    <div
+      class="message-banner"
+      th:if="${param.error != null and param.error[0] == 'notfound'}"
+    >
+      Error: Room not found. Please check the Room ID and try again.
+    </div>
+    <div
+      class="message-banner"
+      th:if="${param.error != null and param.error[0] == 'full'}"
+    >
+      Error: That room is already at maximum capacity!
+    </div>
+    <div
+      class="message-banner"
+      th:if="${param.error != null and param.error[0] == 'started'}"
+    >
+      Error: That game has already started!
+    </div>
+
     <div class="login-container lobby-wrapper">
       <div class="lobby-section">
         <h1>Splendor</h1>
         <h2>Create New Game</h2>
         <form th:action="@{/start}" method="post">
+          <div class="form-group">
+            <label for="hostName">Your Name (Host)</label>
+            <input
+              type="text"
+              id="hostName"
+              name="hostName"
+              placeholder="Enter your name"
+              required
+              maxlength="20"
+            />
+          </div>
           <div class="form-group">
             <label for="numPlayers">Room Capacity</label>
             <select id="numPlayers" name="numPlayers">
@@ -41,17 +71,6 @@
               <option value="3">3 Players</option>
               <option value="4">4 Players</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="hostName">Your Name</label>
-            <input
-              type="text"
-              id="hostName"
-              name="hostName"
-              placeholder="Host Name"
-              required
-              maxlength="20"
-            />
           </div>
           <button type="submit" class="btn-primary">Create Lobby</button>
         </form>

@@ -14,6 +14,20 @@
       </h2>
 
       <div
+        th:if="${param.error != null and param.error[0] == 'full'}"
+        style="
+          background: #8b0000;
+          color: white;
+          padding: 10px;
+          border-radius: 4px;
+          margin-bottom: 15px;
+          font-weight: bold;
+        "
+      >
+        Sorry, this room is already full!
+      </div>
+
+      <div
         style="
           text-align: left;
           background: #1a0a00;
@@ -23,31 +37,112 @@
           margin-bottom: 20px;
         "
       >
-        <h3 style="color: #c8a000; margin-bottom: 10px">Players</h3>
-        <ul>
-          <li th:each="p : ${game.players}" style="margin-bottom: 5px">
-            <strong th:text="${p.name}"></strong>
-            <span
-              th:if="${p.uuid == game.hostUuid}"
-              style="color: #c0a07a; font-size: 0.8rem"
-              >(Host)</span
+        <h3 style="color: #c8a000; margin-bottom: 10px">Player Slots</h3>
+        <ul style="list-style-type: none; padding: 0">
+          <li
+            th:each="p : ${game.players}"
+            style="
+              margin-bottom: 8px;
+              padding: 10px;
+              background: #2c1a0a;
+              border-radius: 4px;
+              border: 1px solid #555;
+            "
+          >
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+              "
             >
-            <span th:if="${p.ready}" style="color: #2a9d2a; float: right"
-              >READY ✓</span
-            >
-            <span th:if="${!p.ready}" style="color: #c43030; float: right"
-              >Waiting...</span
-            >
+              <span>
+                <strong th:text="${p.name}"></strong>
+                <span
+                  th:if="${p.uuid == game.hostUuid}"
+                  style="color: #c0a07a; font-size: 0.8rem"
+                  >(Host)</span
+                >
+                <span th:if="${p.ai}" style="color: #c0a07a; font-size: 0.8rem"
+                  >(CPU)</span
+                >
+              </span>
+              <span>
+                <span
+                  th:if="${p.ready}"
+                  style="color: #2a9d2a; margin-right: 10px; font-weight: bold"
+                  >READY ✓</span
+                >
+                <span
+                  th:if="${!p.ready}"
+                  style="color: #c43030; margin-right: 10px"
+                  >Waiting...</span
+                >
+
+                <form
+                  th:if="${p.ai and myUuid == game.hostUuid}"
+                  th:action="@{|/lobby/${roomId}/remove-ai|}"
+                  method="post"
+                  style="display: inline"
+                >
+                  <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+                  <button
+                    type="submit"
+                    class="btn-small"
+                    style="background: #8b0000; color: white"
+                  >
+                    Remove
+                  </button>
+                </form>
+              </span>
+            </div>
           </li>
+
+          <th:block th:if="${game.capacity > game.players.size()}">
+            <li
+              th:each="i : ${#numbers.sequence(1, game.capacity - game.players.size())}"
+              style="
+                margin-bottom: 8px;
+                padding: 10px;
+                background: #2c1a0a;
+                border-radius: 4px;
+                border: 1px solid #555;
+              "
+            >
+              <div
+                style="
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  width: 100%;
+                "
+              >
+                <span style="color: #888; font-style: italic">Empty Slot</span>
+
+                <form
+                  th:if="${myUuid == game.hostUuid}"
+                  th:action="@{|/lobby/${roomId}/add-ai|}"
+                  method="post"
+                  style="display: inline"
+                >
+                  <button
+                    type="submit"
+                    class="btn-small"
+                    style="background: #4a4a8f; color: white"
+                  >
+                    + Add AI
+                  </button>
+                </form>
+              </div>
+            </li>
+          </th:block>
         </ul>
-        <p th:if="${game.players.isEmpty()}" style="color: #c0a07a">
-          No one is here yet.
-        </p>
       </div>
 
       <div>
         <form
-          th:if="${me == null or !me.ready}"
+          th:if="${me == null}"
           th:action="@{|/lobby/${roomId}/ready|}"
           method="post"
           style="margin-bottom: 20px"
@@ -67,16 +162,17 @@
             type="submit"
             class="btn-primary"
             style="background: #2a9d2a; width: 100%"
+            th:disabled="${game.players.size() >= game.capacity}"
           >
-            I'm Ready
+            Join Lobby
           </button>
         </form>
 
         <p
-          th:if="${me != null and me.ready}"
+          th:if="${me != null}"
           style="color: #c8a000; font-weight: bold; margin-bottom: 20px"
         >
-          You are ready!
+          You are in the lobby!
         </p>
       </div>
 
@@ -86,13 +182,18 @@
             type="submit"
             class="btn-primary"
             th:disabled="${!allReady}"
-            style="width: 100%"
+            style="
+              width: 100%;
+              background: #c8a000;
+              color: #000;
+              font-weight: bold;
+            "
           >
             Start Game
           </button>
         </form>
         <p style="font-size: 0.8rem; color: #c0a07a; margin-top: 10px">
-          Game can start when room is full and everyone is ready.
+          Game can start when all slots are filled and everyone is ready.
         </p>
       </div>
     </div>
