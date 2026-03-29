@@ -11,4 +11,4 @@ build
 ```./mvnw clean package -DskipTests```
 
 watch files and build twcss (run on command prompt)
-```cd ./src/main/frontend && npm run watch```
+```cd ./src/main/frontend && npm install && npm run watch```
