@@ -77,7 +77,7 @@ public class CardData {
 
     /** Convenience overload using default path. */
     public static List<Card> buildDeck() {
-        return buildDeck("game/cards.csv");
+        return buildDeck("game/config/cards.csv");
     }
 
     /**
