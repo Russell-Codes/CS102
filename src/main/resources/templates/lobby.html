@@ -2,197 +2,154 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Splendor — Waiting Room</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
   </head>
-  <body>
-    <div class="login-container" style="max-width: 600px">
-      <h1>Room: <span style="color: white" th:text="${roomId}"></span></h1>
-      <h2 style="margin-bottom: 20px">
-        Waiting for players... (<span th:text="${game.players.size()}"></span
-        >/<span th:text="${game.capacity}"></span>)
-      </h2>
+  <body
+    class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans"
+  >
+    <div
+      class="w-full max-w-lg bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-6 sm:p-8"
+    >
+      <div class="text-center mb-8">
+        <h1 class="text-2xl text-gray-400">
+          Room:
+          <span
+            class="text-white font-mono tracking-wider font-bold"
+            th:text="${roomId}"
+          ></span>
+        </h1>
+        <h2 class="text-lg text-yellow-500 mt-2 font-semibold">
+          Waiting for players... (<span th:text="${game.players.size()}"></span
+          >/<span th:text="${game.capacity}"></span>)
+        </h2>
+      </div>
 
       <div
         th:if="${param.error != null and param.error[0] == 'full'}"
-        style="
-          background: #8b0000;
-          color: white;
-          padding: 10px;
-          border-radius: 4px;
-          margin-bottom: 15px;
-          font-weight: bold;
-        "
+        class="bg-red-600 text-white font-bold p-3 rounded-lg mb-6 text-center shadow"
       >
         Sorry, this room is already full!
       </div>
 
-      <div
-        style="
-          text-align: left;
-          background: #1a0a00;
-          padding: 15px;
-          border-radius: 6px;
-          border: 1px solid #8b6914;
-          margin-bottom: 20px;
-        "
-      >
-        <h3 style="color: #c8a000; margin-bottom: 10px">Player Slots</h3>
-        <ul style="list-style-type: none; padding: 0">
+      <div class="bg-gray-900 border border-gray-700 rounded-xl p-4 mb-6">
+        <h3
+          class="text-sm uppercase tracking-widest text-gray-500 font-bold mb-4"
+        >
+          Player Slots
+        </h3>
+        <ul class="space-y-3">
           <li
             th:each="p : ${game.players}"
-            style="
-              margin-bottom: 8px;
-              padding: 10px;
-              background: #2c1a0a;
-              border-radius: 4px;
-              border: 1px solid #555;
-            "
+            class="flex justify-between items-center bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-sm"
           >
-            <div
-              style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                width: 100%;
-              "
-            >
-              <span>
-                <strong th:text="${p.name}"></strong>
-                <span
-                  th:if="${p.uuid == game.hostUuid}"
-                  style="color: #c0a07a; font-size: 0.8rem"
-                  >(Host)</span
-                >
-                <span th:if="${p.ai}" style="color: #c0a07a; font-size: 0.8rem"
-                  >(CPU)</span
-                >
-              </span>
-              <span>
-                <span
-                  th:if="${p.ready}"
-                  style="color: #2a9d2a; margin-right: 10px; font-weight: bold"
-                  >READY ✓</span
-                >
-                <span
-                  th:if="${!p.ready}"
-                  style="color: #c43030; margin-right: 10px"
-                  >Waiting...</span
-                >
+            <div>
+              <strong class="text-lg text-white" th:text="${p.name}"></strong>
+              <span
+                th:if="${p.uuid == game.hostUuid}"
+                class="ml-2 px-2 py-0.5 bg-yellow-900/50 text-yellow-500 text-xs rounded-full border border-yellow-700"
+                >Host</span
+              >
+              <span
+                th:if="${p.ai}"
+                class="ml-2 px-2 py-0.5 bg-purple-900/50 text-purple-400 text-xs rounded-full border border-purple-700"
+                >CPU</span
+              >
+            </div>
+            <div class="flex items-center gap-3">
+              <span th:if="${p.ready}" class="text-green-500 font-bold text-sm"
+                >READY ✓</span
+              >
+              <span
+                th:if="${!p.ready}"
+                class="text-red-400 text-sm animate-pulse"
+                >Waiting...</span
+              >
 
-                <form
-                  th:if="${p.ai and myUuid == game.hostUuid}"
-                  th:action="@{|/lobby/${roomId}/remove-ai|}"
-                  method="post"
-                  style="display: inline"
+              <form
+                th:if="${p.ai and myUuid == game.hostUuid}"
+                th:action="@{|/lobby/${roomId}/remove-ai|}"
+                method="post"
+              >
+                <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+                <button
+                  type="submit"
+                  class="bg-red-900 hover:bg-red-700 text-red-100 text-xs px-2 py-1 rounded transition-colors"
                 >
-                  <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
-                  <button
-                    type="submit"
-                    class="btn-small"
-                    style="background: #8b0000; color: white"
-                  >
-                    Remove
-                  </button>
-                </form>
-              </span>
+                  Remove
+                </button>
+              </form>
             </div>
           </li>
 
           <th:block th:if="${game.capacity > game.players.size()}">
             <li
               th:each="i : ${#numbers.sequence(1, game.capacity - game.players.size())}"
-              style="
-                margin-bottom: 8px;
-                padding: 10px;
-                background: #2c1a0a;
-                border-radius: 4px;
-                border: 1px solid #555;
-              "
+              class="flex justify-between items-center bg-gray-900 border border-dashed border-gray-600 rounded-lg p-3"
             >
-              <div
-                style="
-                  display: flex;
-                  justify-content: space-between;
-                  align-items: center;
-                  width: 100%;
-                "
+              <span class="text-gray-500 italic">Empty Slot</span>
+              <form
+                th:if="${myUuid == game.hostUuid}"
+                th:action="@{|/lobby/${roomId}/add-ai|}"
+                method="post"
               >
-                <span style="color: #888; font-style: italic">Empty Slot</span>
-
-                <form
-                  th:if="${myUuid == game.hostUuid}"
-                  th:action="@{|/lobby/${roomId}/add-ai|}"
-                  method="post"
-                  style="display: inline"
+                <button
+                  type="submit"
+                  class="bg-indigo-900 hover:bg-indigo-700 text-indigo-100 text-xs px-3 py-1 rounded transition-colors"
                 >
-                  <button
-                    type="submit"
-                    class="btn-small"
-                    style="background: #4a4a8f; color: white"
-                  >
-                    + Add AI
-                  </button>
-                </form>
-              </div>
+                  + Add AI
+                </button>
+              </form>
             </li>
           </th:block>
         </ul>
       </div>
 
-      <div>
+      <div th:if="${me == null}" class="mb-4">
         <form
-          th:if="${me == null}"
           th:action="@{|/lobby/${roomId}/ready|}"
           method="post"
-          style="margin-bottom: 20px"
+          class="space-y-3"
         >
-          <div class="form-group">
-            <label for="playerName">Enter Your Name</label>
+          <div>
             <input
               type="text"
-              id="playerName"
               name="playerName"
-              placeholder="Your Name"
+              placeholder="Enter Your Name"
               required
               maxlength="20"
+              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all text-center text-lg"
             />
           </div>
           <button
             type="submit"
-            class="btn-primary"
-            style="background: #2a9d2a; width: 100%"
             th:disabled="${game.players.size() >= game.capacity}"
+            class="w-full bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-lg shadow-lg transition-colors"
           >
             Join Lobby
           </button>
         </form>
-
-        <p
-          th:if="${me != null}"
-          style="color: #c8a000; font-weight: bold; margin-bottom: 20px"
-        >
-          You are in the lobby!
-        </p>
       </div>
 
-      <div th:if="${myUuid == game.hostUuid}">
+      <div th:if="${me != null}" class="text-center mb-6">
+        <p class="text-green-400 font-bold text-lg">You are in the lobby!</p>
+      </div>
+
+      <div
+        th:if="${myUuid == game.hostUuid}"
+        class="pt-4 border-t border-gray-700"
+      >
         <form th:action="@{|/lobby/${roomId}/start|}" method="post">
           <button
             type="submit"
-            class="btn-primary"
             th:disabled="${!allReady}"
-            style="
-              width: 100%;
-              background: #c8a000;
-              color: #000;
-              font-weight: bold;
-            "
+            class="w-full bg-yellow-500 hover:bg-yellow-400 disabled:bg-gray-700 disabled:text-gray-500 disabled:cursor-not-allowed text-gray-900 font-extrabold py-4 rounded-xl shadow-lg transition-colors text-xl uppercase tracking-wider"
           >
             Start Game
           </button>
         </form>
-        <p style="font-size: 0.8rem; color: #c0a07a; margin-top: 10px">
+        <p class="text-xs text-gray-500 text-center mt-3">
           Game can start when all slots are filled and everyone is ready.
         </p>
       </div>
