@@ -1,0 +1,87 @@
+name: Deploy Spring Boot to AWS
+
+on:
+    push:
+        branches:
+            - main
+
+# REQUIRED: These permissions allow GitHub to request the OIDC token from AWS
+permissions:
+    id-token: write
+    contents: read
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        if: github.repository == 'Russell-Codes/CS102' # Ensure this workflow only runs for the intended repository
+
+        steps:
+            # 1. Check out the repository code
+            - name: Checkout Code
+              uses: actions/checkout@v4
+
+            # 2. Set up Java 25
+            - name: Set up JDK 25
+              uses: actions/setup-java@v4
+              with:
+                  java-version: "25"
+                  distribution: "corretto"
+                  cache: maven
+
+            # 3. Build the application with Maven
+            - name: Build with Maven
+              run: ./mvnw clean package -DskipTests
+
+            # 4. Generate a unique deployment package name
+            - name: Generate Deployment Package Name
+              id: generate-name
+              run: echo "deploy_package=splendor-app-${{ github.sha }}.jar" >> $GITHUB_ENV
+
+            # 5. Rename the built JAR file
+            - name: Prepare Deployment Artifact
+              run: mv target/splendor-0.0.1-SNAPSHOT.jar ${{ env.deploy_package }}
+
+            # 6. Authenticate with AWS using your Role (No Access Keys!)
+            # This step MUST come before any custom AWS CLI commands
+            - name: Configure AWS Credentials
+              id: aws_creds
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                  aws-region: ${{ secrets.AWS_REGION }}
+                  output-credentials: true # Crucial: exposes the temporary keys to the next steps
+
+            # 7. Print the URLs to both the Terminal Log AND the GitHub Summary Dashboard
+            - name: Generate Deployment Summary URLs
+              run: |
+                  RAW_URL=$(aws elasticbeanstalk describe-environments \
+                      --application-name splendor-app \
+                      --environment-names splendor-app-env \
+                      --query "Environments[0].CNAME" \
+                      --output text)
+
+                  # --- 1. Print directly to the terminal log (Visible in the black screen) ---
+                  echo "================================================================"
+                  echo "🌐 Secure Custom Domain: https://splendor-app.com"
+                  echo "🔗 Internal AWS URL:     http://$RAW_URL"
+                  echo "================================================================"
+
+                  # --- 2. Send to the Markdown Dashboard (Visible on the Summary tab) ---
+                  echo "### 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Secure Custom Domain:** [https://splendor-app.com](https://splendor-app.com)" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Internal AWS URL (Direct):** [http://$RAW_URL](http://$RAW_URL)" >> $GITHUB_STEP_SUMMARY
+
+            # 8. Deploy to Elastic Beanstalk
+            - name: Deploy to Elastic Beanstalk
+              uses: einaregilsson/beanstalk-deploy@v22
+              with:
+                  # Pass the temporary credentials explicitly here
+                  aws_access_key: ${{ steps.aws_creds.outputs.aws-access-key-id }}
+                  aws_secret_key: ${{ steps.aws_creds.outputs.aws-secret-access-key }}
+                  aws_session_token: ${{ steps.aws_creds.outputs.aws-session-token }}
+                  application_name: splendor-app # Must exactly match AWS Beanstalk App Name
+                  environment_name: splendor-app-env # Must exactly match AWS Beanstalk Env Name
+                  version_label: ${{ github.sha }}
+                  region: ${{ secrets.AWS_REGION }}
+                  deployment_package: ${{ env.deploy_package }}
