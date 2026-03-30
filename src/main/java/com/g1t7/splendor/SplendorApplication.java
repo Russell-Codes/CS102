@@ -2,6 +2,7 @@ package com.g1t7.splendor;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The monolithic execution root for the Splendor Spring Boot Application.
@@ -9,6 +10,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * internal component scan (finding Controllers and Services), and loads application contexts.
  */
 @SpringBootApplication
+@EnableScheduling
 public class SplendorApplication {
 
     /**

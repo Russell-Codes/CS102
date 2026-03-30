@@ -2,103 +2,120 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
-    <title>Splendor — Login</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splendor — Online</title>
+    <link rel="stylesheet" th:href="@{/css/main.css}" />
   </head>
-  <body>
-    <div class="login-container">
-      <h1>Splendor</h1>
-      <h2>Game Setup</h2>
-      <form th:action="@{/start}" th:object="${login}" method="post">
-        <!-- Number of players -->
-        <div class="form-group">
-          <label for="numPlayers">Number of Players</label>
-          <select
-            id="numPlayers"
-            th:field="*{numPlayers}"
-            onchange="togglePlayerFields()"
-          >
-            <option value="2">2 Players</option>
-            <option value="3">3 Players</option>
-            <option value="4">4 Players</option>
-          </select>
-        </div>
-
-        <!-- Player 1 (always human) -->
-        <div class="form-group">
-          <label for="play1">Player 1 (You)</label>
-          <input
-            type="text"
-            id="play1"
-            th:field="*{play1}"
-            placeholder="Player 1"
-            maxlength="20"
-          />
-        </div>
-
-        <!-- Player 2 -->
-        <div class="form-group" id="p2group">
-          <label for="play2">Player 2</label>
-          <div class="player-row">
-            <input
-              type="text"
-              id="play2"
-              th:field="*{play2}"
-              placeholder="Player 2"
-              maxlength="20"
-            />
-            <label class="ai-label"
-              ><input type="checkbox" name="aiPlayers" value="ai2" /> CPU</label
-            >
-          </div>
-        </div>
-
-        <!-- Player 3 -->
-        <div class="form-group" id="p3group" style="display: none">
-          <label for="play3">Player 3</label>
-          <div class="player-row">
-            <input
-              type="text"
-              id="play3"
-              th:field="*{play3}"
-              placeholder="Player 3"
-              maxlength="20"
-            />
-            <label class="ai-label"
-              ><input type="checkbox" name="aiPlayers" value="ai3" /> CPU</label
-            >
-          </div>
-        </div>
-
-        <!-- Player 4 -->
-        <div class="form-group" id="p4group" style="display: none">
-          <label for="play4">Player 4</label>
-          <div class="player-row">
-            <input
-              type="text"
-              id="play4"
-              th:field="*{play4}"
-              placeholder="Player 4"
-              maxlength="20"
-            />
-            <label class="ai-label"
-              ><input type="checkbox" name="aiPlayers" value="ai4" /> CPU</label
-            >
-          </div>
-        </div>
-
-        <button type="submit" class="btn-primary">Start Game</button>
-      </form>
+  <body
+    class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center pt-12 px-4 font-sans"
+  >
+    <div class="w-full max-w-3xl mb-6">
+      <div
+        th:if="${param.error != null and param.error[0] == 'notfound'}"
+        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
+      >
+        Error: Room not found. Please check the Room ID and try again.
+      </div>
+      <div
+        th:if="${param.error != null and param.error[0] == 'full'}"
+        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
+      >
+        Error: That room is already at maximum capacity!
+      </div>
+      <div
+        th:if="${param.error != null and param.error[0] == 'started'}"
+        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
+      >
+        Error: That game has already started!
+      </div>
     </div>
 
-    <script>
-      function togglePlayerFields() {
-        var n = parseInt(document.getElementById("numPlayers").value);
-        document.getElementById("p3group").style.display =
-          n >= 3 ? "block" : "none";
-        document.getElementById("p4group").style.display =
-          n >= 4 ? "block" : "none";
-      }
-    </script>
+    <div
+      class="w-full max-w-4xl bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 flex flex-col md:flex-row gap-8"
+    >
+      <div class="flex-1">
+        <h1
+          class="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-yellow-600 mb-2"
+        >
+          Splendor
+        </h1>
+        <h2 class="text-xl text-gray-400 mb-6 font-semibold">
+          Create New Game
+        </h2>
+
+        <form th:action="@{/start}" method="post" class="space-y-4">
+          <div>
+            <label
+              for="hostName"
+              class="block text-sm font-medium text-gray-300 mb-1"
+              >Your Name (Host)</label
+            >
+            <input
+              type="text"
+              id="hostName"
+              name="hostName"
+              placeholder="Enter your name"
+              required
+              maxlength="20"
+              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+            />
+          </div>
+          <div>
+            <label
+              for="numPlayers"
+              class="block text-sm font-medium text-gray-300 mb-1"
+              >Room Capacity</label
+            >
+            <select
+              id="numPlayers"
+              name="numPlayers"
+              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+            >
+              <option value="2">2 Players</option>
+              <option value="3">3 Players</option>
+              <option value="4">4 Players</option>
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="w-full hover:cursor-pointer bg-linear-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-gray-900 font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5"
+          >
+            Create Lobby
+          </button>
+        </form>
+      </div>
+
+      <div class="hidden md:block w-px bg-gray-700"></div>
+
+      <div class="flex-1 flex flex-col justify-center">
+        <h2 class="text-xl text-gray-400 mb-6 font-semibold md:mt-10">
+          Join Existing Game
+        </h2>
+
+        <form action="/join" method="get" class="space-y-4">
+          <div>
+            <label
+              for="roomId"
+              class="block text-sm font-medium text-gray-300 mb-1"
+              >Room ID</label
+            >
+            <input
+              type="text"
+              id="roomId"
+              name="roomId"
+              placeholder="e.g. A1B2C3"
+              required
+              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+          <button
+            type="submit"
+            class="w-full hover:cursor-pointer bg-linear-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 mt-2"
+          >
+            Join Lobby
+          </button>
+        </form>
+      </div>
+    </div>
   </body>
 </html>

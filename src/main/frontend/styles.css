@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* 1. CONTENT  */
+@source "../resources/templates";
+
+/* 2. THEME & COLORS */
+@theme {
+  /* Gem colors */
+  --color-gem-ruby: #dc2626;
+  --color-gem-sapphire: #2563eb;
+  --color-gem-emerald: #16a34a;
+  --color-gem-diamond: #f8fafc;
+  --color-gem-onyx: #1e293b;
+  --color-gem-gold: #eab308;
+
+  /* Splendor colors */
+  --color-splendor-dark: #1a0a00;
+  --color-splendor-brown: #2c1a0a;
+  --color-splendor-accent: #8b6914;
+}
+
+/* 3. CUSTOM UTILITIES */
+@layer utilities {
+  .gem-white {
+    @apply bg-slate-100 text-slate-900 border-slate-300;
+  }
+  .gem-blue {
+    @apply bg-blue-600 text-white border-blue-800;
+  }
+  .gem-green {
+    @apply bg-emerald-600 text-white border-emerald-800;
+  }
+  .gem-red {
+    @apply bg-red-600 text-white border-red-800;
+  }
+  .gem-black {
+    @apply bg-slate-800 text-white border-slate-950;
+  }
+  .gem-gold {
+    @apply bg-yellow-400 text-yellow-950 border-yellow-600;
+  }
+
+  .cost-icon {
+    @apply w-4 h-4 rounded-full border shadow-inner flex items-center justify-center text-[10px] font-bold;
+  }
+}

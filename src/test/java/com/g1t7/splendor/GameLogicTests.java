@@ -76,7 +76,7 @@ class GameLogicTests {
 
     @Test
     void csvLoads90Cards() {
-        List<Card> cards = CardData.buildDeck("game/cards.csv");
+        List<Card> cards = CardData.buildDeck("game/config/cards.csv");
         assertEquals(90, cards.size(), "CSV should contain 90 cards");
     }
 

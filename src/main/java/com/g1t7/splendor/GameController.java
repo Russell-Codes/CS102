@@ -1,14 +1,15 @@
 package com.g1t7.splendor;
 
+import com.g1t7.splendor.model.AIPlayer;
 import com.g1t7.splendor.model.Card;
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +23,13 @@ import java.util.List;
  * pattern to prevent duplicate form submissions and ensure safe, uniform state transitions.
  */
 @Controller
+@RequestMapping("/game/{roomId}")
 public class GameController {
 
-    // -------------------------------------------------------------------------
-    // GET /game
-    // -------------------------------------------------------------------------
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    @Autowired
+    private GameManager gameManager;
 
     /**
      * Renders the primary game board view.
@@ -37,20 +40,36 @@ public class GameController {
      * @param model   The Spring MVC model used to inject data into the Thymeleaf template.
      * @return The canonical name of the Thymeleaf HTML template to render, or a redirect directive.
      */
-    @GetMapping("/game")
-    public String showGame(HttpSession session, Model model) {
-        Game game = (Game) session.getAttribute("game");
-        if (game == null)
+    @GetMapping
+    public String showGame(@PathVariable String roomId, Model model, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        if (game == null || !game.isStarted())
             return "redirect:/";
         if (game.isGameOver())
-            return "redirect:/gameover";
+            return "redirect:/gameover/" + roomId;
+
         model.addAttribute("game", game);
+        model.addAttribute("roomId", roomId);
+        model.addAttribute("myUuid", session.getAttribute("userUuid"));
         return "game";
     }
 
-    // -------------------------------------------------------------------------
-    // POST /game/take-coins (PRG)
-    // -------------------------------------------------------------------------
+    // --- HEARTBEAT PING ---
+    @PostMapping("/ping")
+    @ResponseBody
+    public String handlePing(@PathVariable String roomId, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        String myUuid = (String) session.getAttribute("userUuid");
+        if (game != null && myUuid != null) {
+            for (Player p : game.getPlayers()) {
+                if (myUuid.equals(p.getUuid())) {
+                    p.setLastHeartbeat(System.currentTimeMillis());
+                    break;
+                }
+            }
+        }
+        return "ok";
+    }
 
     /**
      * Handles the player's action to collect gem coins from the bank.
@@ -68,21 +87,75 @@ public class GameController {
      * @param session The HTTP session storing the persistent game object.
      * @return A redirect URI directive to refresh the game board.
      */
-    @PostMapping("/game/take-coins")
-    public String takeCoins(
-            @RequestParam(defaultValue = "0") int white,
-            @RequestParam(defaultValue = "0") int blue,
-            @RequestParam(defaultValue = "0") int green,
-            @RequestParam(defaultValue = "0") int red,
-            @RequestParam(defaultValue = "0") int black,
-            HttpSession session) {
+    // --- HOST ACTIONS ---
+    @PostMapping("/host-action/ai")
+    public String replaceWithAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        if (game != null && game.getHostUuid().equals(session.getAttribute("userUuid"))) {
+            for (Player p : game.getPlayers()) {
+                if (p.getUuid() != null && p.getUuid().equals(targetUuid)) {
+                    p.setAi(true);
+                    p.setName(p.getName() + " (CPU Replaced)");
+                    if (game.getCurrentPlayer() == p) {
+                        AIPlayer.takeTurn(game, p);
+                        game.changeTurns();
+                    }
+                    messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+                    break;
+                }
+            }
+        }
+        return "redirect:/game/" + roomId;
+    }
 
-        Game game = (Game) session.getAttribute("game");
+    @PostMapping("/host-action/eject")
+    public String ejectPlayer(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
+        if (game != null && game.getHostUuid().equals(session.getAttribute("userUuid"))) {
+            for (Player p : game.getPlayers()) {
+                if (p.getUuid() != null && p.getUuid().equals(targetUuid)) {
+                    for (int i = 0; i < 6; i++) {
+                        game.getBankCoins()[i] += p.getMycoins()[i];
+                        p.getMycoins()[i] = 0;
+                    }
+                    for (Card c : p.getReservedCards()) {
+                        c.setReserved(false);
+                        if (c.getTier() == 1)
+                            game.getTier1Deck().add(0, c);
+                        if (c.getTier() == 2)
+                            game.getTier2Deck().add(0, c);
+                        if (c.getTier() == 3)
+                            game.getTier3Deck().add(0, c);
+                    }
+                    p.getReservedCards().clear();
+                    p.setEjected(true);
+                    p.setName(p.getName() + " (EJECTED)");
+
+                    if (game.getCurrentPlayer() == p) {
+                        game.changeTurns();
+                    }
+                    messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+                    break;
+                }
+            }
+        }
+        return "redirect:/game/" + roomId;
+    }
+
+    // --- GAME ACTIONS ---
+    @PostMapping("/take-coins")
+    public String takeCoins(@PathVariable String roomId, @RequestParam(defaultValue = "0") int white,
+            @RequestParam(defaultValue = "0") int blue, @RequestParam(defaultValue = "0") int green,
+            @RequestParam(defaultValue = "0") int red, @RequestParam(defaultValue = "0") int black,
+            HttpSession session) {
+        Game game = gameManager.getGame(roomId);
         if (game == null)
             return "redirect:/";
 
-        // Build color list by repeating each color the requested number of times
-        // (clamped 0-2)
+        Player current = game.getCurrentPlayer();
+        if (!current.getUuid().equals(session.getAttribute("userUuid")))
+            return "redirect:/game/" + roomId;
+
         List<String> selectedColors = new ArrayList<>();
         addColor(selectedColors, "WHITE", white);
         addColor(selectedColors, "BLUE", blue);
@@ -90,28 +163,17 @@ public class GameController {
         addColor(selectedColors, "RED", red);
         addColor(selectedColors, "BLACK", black);
 
-        if (selectedColors.isEmpty()) {
-            game.setMessage("Please select at least 1 coin.");
-            return "redirect:/game";
-        }
+        if (selectedColors.isEmpty() || game.isPendingDiscard())
+            return "redirect:/game/" + roomId;
 
-        if (game.isPendingDiscard()) {
-            game.setMessage("You must discard coins before taking another action.");
-            return "redirect:/game";
-        }
-
-        Player current = game.getCurrentPlayer();
-        boolean ok = current.exchangeCoin(selectedColors);
-        if (ok) {
-            if (current.getTotalCoins() > 10) {
+        if (current.exchangeCoin(selectedColors)) {
+            if (current.getTotalCoins() > 10)
                 game.setPendingDiscard(true);
-                game.setMessage("You have " + current.getTotalCoins()
-                        + " coins. Discard down to 10.");
-            } else {
+            else
                 game.changeTurns();
-            }
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
         }
-        return "redirect:/game";
+        return "redirect:/game/" + roomId;
     }
 
     /**
@@ -143,39 +205,26 @@ public class GameController {
      * @param session   The HTTP session resolving the current game state context.
      * @return A redirect URI directive to clear the POST payload and refresh the game board.
      */
-    @PostMapping("/game/buy-card")
-    public String buyCard(
-            @RequestParam("cardIndex") int cardIndex,
-            HttpSession session) {
-
-        Game game = (Game) session.getAttribute("game");
+    @PostMapping("/buy-card")
+    public String buyCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
         if (game == null)
             return "redirect:/";
 
-        if (game.isPendingDiscard()) {
-            game.setMessage("You must discard coins before taking another action.");
-            return "redirect:/game";
-        }
-
         Player current = game.getCurrentPlayer();
-        Card card = resolveCard(game, current, cardIndex);
-        if (card == null) {
-            game.setMessage("Invalid card selection.");
-            return "redirect:/game";
-        }
+        if (!current.getUuid().equals(session.getAttribute("userUuid")) || game.isPendingDiscard())
+            return "redirect:/game/" + roomId;
 
-        boolean ok = current.buyCard(card);
-        if (ok) {
-            if (cardIndex >= 0) {
+        Card card = resolveCard(game, current, cardIndex);
+        if (card != null && current.buyCard(card)) {
+            if (cardIndex >= 0)
                 game.replenishCard(cardIndex);
-            } else {
-                // Remove from player's reserved list (already done in buyCard via card
-                // reference)
+            else
                 current.getReservedCards().remove(card);
-            }
             game.changeTurns();
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
         }
-        return "redirect:/game";
+        return "redirect:/game/" + roomId;
     }
 
     // -------------------------------------------------------------------------
@@ -191,46 +240,29 @@ public class GameController {
      * @param session   The HTTP session containing the core Game model.
      * @return A redirect URI directive to refresh the game board rendering.
      */
-    @PostMapping("/game/reserve-card")
-    public String reserveCard(
-            @RequestParam("cardIndex") int cardIndex,
+    @PostMapping("/reserve-card")
+    public String reserveCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex,
             HttpSession session) {
-
-        Game game = (Game) session.getAttribute("game");
+        Game game = gameManager.getGame(roomId);
         if (game == null)
             return "redirect:/";
 
-        if (game.isPendingDiscard()) {
-            game.setMessage("You must discard coins before taking another action.");
-            return "redirect:/game";
-        }
-
         Player current = game.getCurrentPlayer();
+        if (!current.getUuid().equals(session.getAttribute("userUuid")) || game.isPendingDiscard())
+            return "redirect:/game/" + roomId;
 
-        // Only visible board cards can be reserved (cardIndex 0–11)
-        if (cardIndex < 0 || cardIndex >= game.getVisibleCards().size()) {
-            game.setMessage("Cannot reserve that card.");
-            return "redirect:/game";
-        }
-
-        Card card = game.getVisibleCards().get(cardIndex);
-        if (card == null) {
-            game.setMessage("No card in that slot.");
-            return "redirect:/game";
-        }
-
-        boolean ok = current.escortCard(card);
-        if (ok) {
-            game.replenishCard(cardIndex);
-            if (current.getTotalCoins() > 10) {
-                game.setPendingDiscard(true);
-                game.setMessage("You have " + current.getTotalCoins()
-                        + " coins. Discard down to 10.");
-            } else {
-                game.changeTurns();
+        if (cardIndex >= 0 && cardIndex < game.getVisibleCards().size()) {
+            Card card = game.getVisibleCards().get(cardIndex);
+            if (card != null && current.escortCard(card)) {
+                game.replenishCard(cardIndex);
+                if (current.getTotalCoins() > 10)
+                    game.setPendingDiscard(true);
+                else
+                    game.changeTurns();
+                messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
             }
         }
-        return "redirect:/game";
+        return "redirect:/game/" + roomId;
     }
 
     // -------------------------------------------------------------------------
@@ -246,29 +278,24 @@ public class GameController {
      * @param session The contextual HTTP session holding the suspended Game state.
      * @return Returns a PRG redirect triggering a board refresh or the next player's turn.
      */
-    @PostMapping("/game/discard-coins")
-    public String discardCoins(
-            @RequestParam("color") String color,
-            HttpSession session) {
-
-        Game game = (Game) session.getAttribute("game");
+    @PostMapping("/discard-coins")
+    public String discardCoins(@PathVariable String roomId, @RequestParam("color") String color, HttpSession session) {
+        Game game = gameManager.getGame(roomId);
         if (game == null)
             return "redirect:/";
 
-        if (!game.isPendingDiscard()) {
-            return "redirect:/game";
-        }
-
         Player current = game.getCurrentPlayer();
+        if (!current.getUuid().equals(session.getAttribute("userUuid")) || !game.isPendingDiscard())
+            return "redirect:/game/" + roomId;
+
         boolean ok = current.discardCoin(color);
         if (ok && current.getTotalCoins() <= 10) {
             game.setPendingDiscard(false);
             game.changeTurns();
-        } else if (ok) {
-            game.setMessage("You have " + current.getTotalCoins()
-                    + " coins. Discard down to 10.");
         }
-        return "redirect:/game";
+        if (ok)
+            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        return "redirect:/game/" + roomId;
     }
 
     // -------------------------------------------------------------------------
@@ -330,17 +357,11 @@ public class GameController {
      * @return The specific Card object reference in memory, or null if strictly out of bounds.
      */
     private Card resolveCard(Game game, Player player, int cardIndex) {
-        if (cardIndex >= 0) {
-            List<Card> visible = game.getVisibleCards();
-            if (cardIndex >= visible.size())
-                return null;
-            return visible.get(cardIndex);
-        } else {
-            int reservedIdx = -(cardIndex + 1);
-            List<Card> reserved = player.getReservedCards();
-            if (reservedIdx >= reserved.size())
-                return null;
-            return reserved.get(reservedIdx);
-        }
+        if (cardIndex >= 0 && cardIndex < game.getVisibleCards().size())
+            return game.getVisibleCards().get(cardIndex);
+        int reservedIdx = -(cardIndex + 1);
+        if (reservedIdx >= 0 && reservedIdx < player.getReservedCards().size())
+            return player.getReservedCards().get(reservedIdx);
+        return null;
     }
 }
