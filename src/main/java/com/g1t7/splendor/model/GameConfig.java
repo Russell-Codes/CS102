@@ -9,10 +9,11 @@ import java.util.Properties;
  */
 public class GameConfig implements Serializable {
 
-    private static final String CONFIG_PATH = "game/config.properties";
+    private static final String CONFIG_PATH = "game/config/config.properties";
 
     private int winScore = 15;
-    private String cardFile = "game/config/cards.csv";
+    private static String cardFile = "game/config/cards.csv";
+    private static String nobleFile = "game/config/nobles.csv";
 
     // Gem counts by number of players (index 0 unused, 2–4 used)
     private int gems2Players = 4;
@@ -38,25 +39,37 @@ public class GameConfig implements Serializable {
         if (file.exists()) {
             try (InputStream is = new FileInputStream(file)) {
                 props.load(is);
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                System.err.println("[GameConfig] Error loading config from file: " + CONFIG_PATH);
             }
         } else {
-            try (InputStream is = getClass().getClassLoader().getResourceAsStream("config.properties")) {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream(GameConfig.CONFIG_PATH)) {
                 if (is != null)
                     props.load(is);
-            } catch (IOException ignored) {
+            } catch (IOException e) {
+                System.err.println("[GameConfig] Error loading config from classpath: " + GameConfig.CONFIG_PATH);
             }
         }
 
         winScore = getInt(props, "win_score", winScore);
         cardFile = props.getProperty("card_file", cardFile).trim();
+        nobleFile = props.getProperty("noble_file", nobleFile).trim();
         gems2Players = getInt(props, "gems_2_players", gems2Players);
         gems3Players = getInt(props, "gems_3_players", gems3Players);
         gems4Players = getInt(props, "gems_4_players", gems4Players);
         nobles2Players = getInt(props, "nobles_2_players", nobles2Players);
         nobles3Players = getInt(props, "nobles_3_players", nobles3Players);
         nobles4Players = getInt(props, "nobles_4_players", nobles4Players);
-        goldCoins = getInt(props, "gold_coins", goldCoins);
+
+        System.out.println("[GameConfig] Read config\n\twinScore=" + winScore
+                + "\n\tcardFile=" + cardFile
+                + "\n\tnobleFile=" + nobleFile
+                + "\n\tgems2Players=" + gems2Players
+                + "\n\tgems3Players=" + gems3Players
+                + "\n\tgems4Players=" + gems4Players
+                + "\n\tnobles2Players=" + nobles2Players
+                + "\n\tnobles3Players=" + nobles3Players
+                + "\n\tnobles4Players=" + nobles4Players);
     }
 
     private int getInt(Properties props, String key, int defaultVal) {
@@ -93,8 +106,12 @@ public class GameConfig implements Serializable {
         return winScore;
     }
 
-    public String getCardFile() {
+    public static String getCardFile() {
         return cardFile;
+    }
+
+    public static String getNobleFile() {
+        return nobleFile;
     }
 
     public int getGoldCoins() {

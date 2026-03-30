@@ -17,6 +17,7 @@ public class Player implements Serializable {
     private int[] mycards = new int[5];
     private List<Card> reservedCards = new ArrayList<>();
     private Stack<Card> cards = new Stack<>();
+    private List<Noble> obtainedNobles = new ArrayList<>();
 
     // --- NEW MULTIPLAYER FIELDS ---
     private String uuid;
@@ -163,13 +164,27 @@ public class Player implements Serializable {
     public void checkNobles(List<Noble> nobles) {
         if (nobles == null)
             return;
-        Iterator<Noble> it = nobles.iterator();
-        while (it.hasNext()) {
-            Noble noble = it.next();
+
+        List<Noble> satisfied = new ArrayList<>();
+        for (Noble noble : nobles) {
             if (noble.isSatisfiedBy(mycards)) {
-                score += noble.getVictoryPoints();
-                it.remove();
-                break;
+                satisfied.add(noble);
+            }
+        }
+
+        // If exactly one noble is satisfied, apply it instantly
+        if (satisfied.size() == 1) {
+            score += satisfied.get(0).getVictoryPoints();
+            this.obtainedNobles.add(satisfied.get(0));
+            nobles.remove(satisfied.get(0));
+        } else if (satisfied.size() > 1) {
+            if (this.ai) {
+                score += satisfied.get(0).getVictoryPoints();
+                this.obtainedNobles.add(satisfied.get(0));
+                nobles.remove(satisfied.get(0));
+            } else {
+                game.setPendingNobleChoice(true);
+                game.setPendingNobles(satisfied);
             }
         }
     }
@@ -291,5 +306,9 @@ public class Player implements Serializable {
 
     public void setLastHeartbeat(long lastHeartbeat) {
         this.lastHeartbeat = lastHeartbeat;
+    }
+
+    public List<Noble> getObtainedNobles() {
+        return obtainedNobles;
     }
 }

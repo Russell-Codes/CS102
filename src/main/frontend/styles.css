@@ -44,3 +44,62 @@
     @apply w-4 h-4 rounded-full border shadow-inner flex items-center justify-center text-[10px] font-bold;
   }
 }
+
+/* --- REALISTIC GEM TOKENS --- */
+.gem-white {
+  background: url("/images/gems/white.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+.gem-blue {
+  background: url("/images/gems/blue.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+.gem-green {
+  background: url("/images/gems/green.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+.gem-red {
+  background: url("/images/gems/red.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+.gem-black {
+  background: url("/images/gems/black.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+.gem-gold {
+  background: url("/images/gems/gold.png") center/cover no-repeat !important;
+  border-color: transparent !important;
+}
+
+/* Keep small cost icons transparent so the gem shape shows */
+.cost-icon {
+  background-color: transparent !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+}
+
+/* --- THEMATIC CARD BACKGROUNDS --- */
+.card-bg-white {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9)),
+    url("/images/cards/white.png") center/cover !important;
+}
+.card-bg-blue {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9)),
+    url("/images/cards/blue.png") center/cover !important;
+}
+.card-bg-green {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9)),
+    url("/images/cards/green.png") center/cover !important;
+}
+.card-bg-red {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9)),
+    url("/images/cards/red.png") center/cover !important;
+}
+.card-bg-black {
+  background:
+    linear-gradient(rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9)),
+    url("/images/cards/black.png") center/cover !important;
+}
