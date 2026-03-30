@@ -2,38 +2,77 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Splendor — Game Over</title>
     <link rel="stylesheet" th:href="@{/css/main.css}" />
   </head>
-  <body>
-    <div class="gameover-container">
-      <h1>Game Over!</h1>
-      <h2>Winner: <span th:text="${winner.name}">Player</span></h2>
+  <body
+    class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center justify-center p-4 font-sans"
+  >
+    <div
+      class="w-full max-w-3xl bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-6 sm:p-10 text-center"
+    >
+      <h1
+        class="text-5xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-yellow-600 mb-2 uppercase tracking-widest drop-shadow-md"
+      >
+        Game Over!
+      </h1>
 
-      <table class="score-table">
-        <thead>
-          <tr>
-            <th>Player</th>
-            <th>Score</th>
-            <th>Cards Bought</th>
-            <th>Coins Held</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            th:each="p : ${game.players}"
-            th:class="${p.name == winner.name} ? 'winner-row' : ''"
-          >
-            <td th:text="${p.name}">Player</td>
-            <td th:text="${p.score}">0</td>
-            <td th:text="${p.cards.size()}">0</td>
-            <td th:text="${p.getTotalCoins()}">0</td>
-          </tr>
-        </tbody>
-      </table>
+      <h2 class="text-2xl text-gray-300 mb-8">
+        Winner:
+        <strong
+          class="text-yellow-400 font-black text-3xl ml-2"
+          th:text="${winner.name}"
+          >Player</strong
+        >
+        👑
+      </h2>
+
+      <div
+        class="overflow-x-auto mb-8 bg-gray-900 rounded-xl border border-gray-700 shadow-inner"
+      >
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr
+              class="bg-gray-950/50 border-b border-gray-700 text-gray-400 text-xs sm:text-sm uppercase tracking-wider"
+            >
+              <th class="p-4 font-semibold">Player</th>
+              <th class="p-4 font-semibold text-center">Score</th>
+              <th class="p-4 font-semibold text-center">Cards Bought</th>
+              <th class="p-4 font-semibold text-center">Coins Held</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800">
+            <tr
+              th:each="p : ${game.players}"
+              th:class="${p.name == winner.name} ? 'bg-yellow-900/20 text-yellow-100 font-bold' : 'text-gray-300 hover:bg-gray-800 transition-colors'"
+            >
+              <td class="p-4 flex items-center gap-2 whitespace-nowrap">
+                <span th:if="${p.name == winner.name}">🏆</span>
+                <span th:if="${p.name != winner.name}" class="w-5"></span>
+                <span th:text="${p.name}">Player</span>
+              </td>
+              <td
+                class="p-4 text-center text-xl"
+                th:classappend="${p.name == winner.name} ? 'text-yellow-400 font-black' : 'font-medium'"
+                th:text="${p.score}"
+              >
+                0
+              </td>
+              <td class="p-4 text-center" th:text="${p.cards.size()}">0</td>
+              <td class="p-4 text-center" th:text="${p.getTotalCoins()}">0</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
       <form th:action="@{/gameover/restart}" method="post">
-        <button type="submit" class="btn-primary">Play Again</button>
+        <button
+          type="submit"
+          class="w-full sm:w-auto px-12 hover:cursor-pointer bg-linear-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-gray-900 font-extrabold text-lg py-4 rounded-xl shadow-[0_0_15px_rgba(234,179,8,0.2)] transition-all transform hover:-translate-y-1 uppercase tracking-wider"
+        >
+          Play Again
+        </button>
       </form>
     </div>
   </body>

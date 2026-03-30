@@ -24,6 +24,8 @@ public class Game implements Serializable {
     private boolean finalRound = false;
     private boolean gameOver = false;
     private boolean pendingDiscard = false;
+    private boolean pendingNobleChoice = false;
+    private List<Noble> pendingNobles = new ArrayList<>();
 
     // --- NEW MULTIPLAYER FIELDS ---
     private int capacity = 2;
@@ -67,7 +69,7 @@ public class Game implements Serializable {
             dealSlot(slot);
 
         int nobleCount = config.getNobleCount(numPlayers);
-        List<Noble> allNobles = NobleData.buildNobles();
+        List<Noble> allNobles = NobleData.buildNobles(config.getNobleFile());
         Collections.shuffle(allNobles);
         activeNobles = new ArrayList<>(allNobles.subList(0, Math.min(nobleCount, allNobles.size())));
     }
@@ -281,5 +283,21 @@ public class Game implements Serializable {
 
     public void setLastActivityTime(long lastActivityTime) {
         this.lastActivityTime = lastActivityTime;
+    }
+
+    public boolean isPendingNobleChoice() {
+        return pendingNobleChoice;
+    }
+
+    public void setPendingNobleChoice(boolean pendingNobleChoice) {
+        this.pendingNobleChoice = pendingNobleChoice;
+    }
+
+    public List<Noble> getPendingNobles() {
+        return pendingNobles;
+    }
+
+    public void setPendingNobles(List<Noble> pendingNobles) {
+        this.pendingNobles = pendingNobles;
     }
 }

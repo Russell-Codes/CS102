@@ -32,16 +32,13 @@ public class CardData {
                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
 
             String line;
-            boolean headerSkipped = false;
+
+            br.readLine(); // skip header
+            
             while ((line = br.readLine()) != null) {
-                // Strip surrounding quotes from each line
-                line = line.replace("\"", "").trim();
                 if (line.isEmpty())
                     continue;
-                if (!headerSkipped && line.startsWith("ID")) {
-                    headerSkipped = true;
-                    continue;
-                }
+
                 String[] parts = line.split(",");
                 if (parts.length < 9)
                     continue;
@@ -77,7 +74,7 @@ public class CardData {
 
     /** Convenience overload using default path. */
     public static List<Card> buildDeck() {
-        return buildDeck("game/config/cards.csv");
+        return buildDeck(GameConfig.getCardFile());
     }
 
     /**
