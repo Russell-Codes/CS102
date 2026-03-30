@@ -120,7 +120,8 @@
 
                 <div
                   th:if="${card != null}"
-                  th:class="'relative w-full h-36 rounded-xl border border-slate-400/50 shadow-lg flex flex-col justify-between p-2.5 transition-transform hover:-translate-y-1 group card-bg-' + ${card.gemColor.name().toLowerCase()}"
+                  tabindex="0"
+                  th:class="'relative w-full h-36 rounded-xl border border-slate-400/50 shadow-lg flex flex-col justify-between p-2.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group card-bg-' + ${card.gemColor.name().toLowerCase()}"
                 >
                   <div class="flex justify-between items-start">
                     <div
@@ -149,7 +150,7 @@
 
                   <div
                     th:if="${!game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
-                    class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity"
+                    class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity"
                   >
                     <form
                       th:action="@{|/game/${roomId}/buy-card|}"
@@ -200,7 +201,8 @@
               <div class="flex flex-wrap gap-4">
                 <div
                   th:each="noble, nStat : ${game.pendingNobles}"
-                  class="relative w-20 h-24 border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col justify-between p-1.5 transition-transform hover:-translate-y-1 group bg-cover bg-center"
+                  tabindex="0"
+                  class="relative w-20 h-24 border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col justify-between p-1.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group bg-cover bg-center"
                   th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + (${nStat.index % 10} + 1) + '.png)'"
                 >
                   <div
@@ -220,7 +222,7 @@
                   <form
                     th:action="@{|/game/${roomId}/claim-noble|}"
                     method="post"
-                    class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                    class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity"
                   >
                     <input
                       type="hidden"
@@ -494,9 +496,10 @@
             <div class="flex gap-2 overflow-x-auto pb-1">
               <div
                 th:each="rc, rcStat : ${p.reservedCards}"
-                th:class="'relative shrink-0 w-16 h-24 rounded border border-slate-400/50 shadow flex flex-col justify-between p-1 group card-bg-' + ${rc.gemColor.name().toLowerCase()}"
+                tabindex="0"
+                th:class="'relative shrink-0 w-16 h-24 rounded border border-slate-400/50 shadow flex flex-col justify-between p-1 cursor-pointer focus:outline-none group card-bg-' + ${rc.gemColor.name().toLowerCase()}"
               >
-                <div class="flex justify-between items-start mb-1">
+                <div class="flex justify-between items-start mb-1 w-full">
                   <div
                     th:if="${rc.value > 0}"
                     class="bg-black/70 px-1.5 py-0.5 rounded-br-md rounded-tl-sm shadow-sm"
@@ -525,7 +528,7 @@
                   th:if="${pStat.index == game.nowTurn and !game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
                   th:action="@{|/game/${roomId}/buy-card|}"
                   method="post"
-                  class="absolute inset-0 bg-slate-900/90 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded"
+                  class="absolute inset-0 bg-slate-900/90 opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity rounded"
                 >
                   <input
                     type="hidden"
