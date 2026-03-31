@@ -1,4 +1,4 @@
-package com.g1t7.splendor.model;
+package com.g1t7.splendor.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

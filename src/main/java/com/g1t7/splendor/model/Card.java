@@ -2,14 +2,19 @@ package com.g1t7.splendor.model;
 
 import java.io.Serializable;
 
+/**
+ * Represents a playable development card in the game.
+ * Acts as a pure Data Transfer Object (POJO).
+ */
 public class Card implements Serializable {
 
     private int tier;
     private GemColor gemColor;
     private int value;
-    // cost[i] = amount of GemColor.fromIndex(i) gems needed; cost[5] (gold) always
-    // 0
-    private int[] cost = new int[6];
+
+    // Index mapping: 0=WHITE, 1=BLUE, 2=GREEN, 3=RED, 4=BLACK, 5=GOLD (Gold is
+    // always 0 cost)
+    private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
     private String imagePath;
 
@@ -22,6 +27,8 @@ public class Card implements Serializable {
         this.value = value;
         this.cost = cost;
     }
+
+    // --- GETTERS AND SETTERS ---
 
     public int getTier() {
         return tier;
@@ -39,7 +46,11 @@ public class Card implements Serializable {
         this.gemColor = gemColor;
     }
 
-    /** Alias kept for Thymeleaf convenience */
+    /**
+     * * Alias kept specifically for Thymeleaf template convenience.
+     * 
+     * @return The gem color bonus this card provides.
+     */
     public GemColor getColor() {
         return gemColor;
     }
