@@ -8,17 +8,22 @@ import java.util.List;
 
 public class Game implements Serializable {
 
+    // --- CONSTANTS ---
+    public static final int VISIBLE_CARDS_PER_TIER = 4;
+    public static final int TOTAL_VISIBLE_CARDS = 12;
+    public static final int TOTAL_COIN_TYPES = 6;
+
     private GameConfig config;
-    private int[] bankCoins = new int[6];
+    private int[] bankCoins = new int[TOTAL_COIN_TYPES];
     private List<Card> tier1Deck = new ArrayList<>();
     private List<Card> tier2Deck = new ArrayList<>();
     private List<Card> tier3Deck = new ArrayList<>();
-    private List<Card> visibleCards = new ArrayList<>(12);
+    private List<Card> visibleCards = new ArrayList<>(TOTAL_VISIBLE_CARDS);
     private List<Noble> activeNobles = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
 
     private Card pendingCard = null;
-    private int nowTurn = 0;
+    private int currentTurnIndex = 0;
     private int startingPlayer = 0;
     private String message = "";
     private boolean finalRound = false;
@@ -27,7 +32,7 @@ public class Game implements Serializable {
     private boolean pendingNobleChoice = false;
     private List<Noble> pendingNobles = new ArrayList<>();
 
-    // --- NEW MULTIPLAYER FIELDS ---
+    // --- MULTIPLAYER FIELDS ---
     private int capacity = 2;
     private boolean started = false;
     private String hostUuid;
@@ -38,14 +43,21 @@ public class Game implements Serializable {
     }
 
     public void variableInit() {
-        int numPlayers = players.size();
-        if (numPlayers < 2)
-            numPlayers = 2;
+        int numPlayers = Math.max(players.size(), 2);
 
+        initBank(numPlayers);
+        initDecks();
+        initBoard();
+        initNobles(numPlayers);
+    }
+
+    private void initBank(int numPlayers) {
         int gemCount = config.getGemCount(numPlayers);
         int goldCount = config.getGoldCoins();
         bankCoins = new int[] { gemCount, gemCount, gemCount, gemCount, gemCount, goldCount };
+    }
 
+    private void initDecks() {
         List<Card> allCards = CardData.buildDeck(config.getCardFile());
         for (Card c : allCards) {
             if (c.getTier() == 1)
@@ -58,16 +70,21 @@ public class Game implements Serializable {
         Collections.shuffle(tier1Deck);
         Collections.shuffle(tier2Deck);
         Collections.shuffle(tier3Deck);
+    }
 
-        for (int i = 0; i < 12; i++)
+    private void initBoard() {
+        for (int i = 0; i < TOTAL_VISIBLE_CARDS; i++) {
             visibleCards.add(null);
-        for (int slot = 0; slot < 4; slot++)
+        }
+        for (int slot = 0; slot < VISIBLE_CARDS_PER_TIER; slot++)
             dealSlot(slot);
-        for (int slot = 4; slot < 8; slot++)
+        for (int slot = VISIBLE_CARDS_PER_TIER; slot < VISIBLE_CARDS_PER_TIER * 2; slot++)
             dealSlot(slot);
-        for (int slot = 8; slot < 12; slot++)
+        for (int slot = VISIBLE_CARDS_PER_TIER * 2; slot < TOTAL_VISIBLE_CARDS; slot++)
             dealSlot(slot);
+    }
 
+    private void initNobles(int numPlayers) {
         int nobleCount = config.getNobleCount(numPlayers);
         List<Noble> allNobles = NobleData.buildNobles(config.getNobleFile());
         Collections.shuffle(allNobles);
@@ -82,15 +99,15 @@ public class Game implements Serializable {
     }
 
     private List<Card> deckForSlot(int slot) {
-        if (slot < 4)
+        if (slot < VISIBLE_CARDS_PER_TIER)
             return tier1Deck;
-        if (slot < 8)
+        if (slot < VISIBLE_CARDS_PER_TIER * 2)
             return tier2Deck;
         return tier3Deck;
     }
 
     public void changeTurns() {
-        this.lastActivityTime = System.currentTimeMillis(); // Reset idle timer
+        this.lastActivityTime = System.currentTimeMillis();
         pendingCard = null;
         message = "";
 
@@ -98,26 +115,19 @@ public class Game implements Serializable {
             finalRound = true;
         }
 
-        // Loop to find the next player who isn't ejected
-        int nextTurn = nowTurn;
+        int nextTurn = currentTurnIndex;
         int attempts = 0;
         do {
             nextTurn = (nextTurn + 1) % players.size();
             attempts++;
         } while (players.get(nextTurn).isEjected() && attempts < players.size());
 
-        // If everyone was ejected somehow, end game
-        if (attempts >= players.size()) {
+        if (attempts >= players.size() || (finalRound && nextTurn == startingPlayer)) {
             gameOver = true;
             return;
         }
 
-        if (finalRound && nextTurn == startingPlayer) {
-            gameOver = true;
-            return;
-        }
-
-        nowTurn = nextTurn;
+        currentTurnIndex = nextTurn;
 
         Player next = getCurrentPlayer();
         if (next.isAi() && !gameOver) {
@@ -128,7 +138,7 @@ public class Game implements Serializable {
     }
 
     public Player getCurrentPlayer() {
-        return players.get(nowTurn);
+        return players.get(currentTurnIndex);
     }
 
     public void replenishCard(int slotIndex) {
@@ -155,8 +165,8 @@ public class Game implements Serializable {
     }
 
     public List<Card> getVisibleCardsForTier(int tier) {
-        int start = (tier - 1) * 4;
-        return visibleCards.subList(start, start + 4);
+        int start = (tier - 1) * VISIBLE_CARDS_PER_TIER;
+        return visibleCards.subList(start, start + VISIBLE_CARDS_PER_TIER);
     }
 
     public int getDeckSize(int tier) {
@@ -171,7 +181,7 @@ public class Game implements Serializable {
         return config.getWinScore();
     }
 
-    // --- EXISTING GETTERS/SETTERS ---
+    // --- GETTERS/SETTERS ---
     public GameConfig getConfig() {
         return config;
     }
@@ -224,12 +234,12 @@ public class Game implements Serializable {
         this.pendingCard = pendingCard;
     }
 
-    public int getNowTurn() {
-        return nowTurn;
+    public int getCurrentTurnIndex() {
+        return currentTurnIndex;
     }
 
-    public void setNowTurn(int nowTurn) {
-        this.nowTurn = nowTurn;
+    public void setCurrentTurnIndex(int currentTurnIndex) {
+        this.currentTurnIndex = currentTurnIndex;
     }
 
     public String getMessage() {
@@ -252,7 +262,6 @@ public class Game implements Serializable {
         this.pendingDiscard = pendingDiscard;
     }
 
-    // --- NEW MULTIPLAYER GETTERS/SETTERS ---
     public int getCapacity() {
         return capacity;
     }

@@ -110,13 +110,13 @@ public class AIPlayer implements Serializable {
         // ordinal mappings of the core 5 colored gems (WHITE, BLUE, GREEN, RED, BLACK).
         for (int i = 0; i < 5; i++) {
             // Apply infinite noble discount deductions first, bounded rigidly at 0
-            int effective = Math.max(0, card.getCost()[i] - player.getMycards()[i]);
+            int effective = Math.max(0, card.getCost()[i] - player.getMyCards()[i]);
             // Assess required physical token expenditure, accumulating deficits as gold reliance
-            int shortfall = Math.max(0, effective - player.getMycoins()[i]);
+            int shortfall = Math.max(0, effective - player.getMyCoins()[i]);
             goldNeeded += shortfall;
         }
         // Final evaluation: Can wildcard Gold reserves (index 5) bridge the accumulated token deficit?
-        return goldNeeded <= player.getMycoins()[5];
+        return goldNeeded <= player.getMyCoins()[5];
     }
 
     // -------------------------------------------------------------------------
@@ -181,12 +181,12 @@ public class AIPlayer implements Serializable {
         // O(1) Iteration: Compare exact holdings across the strict 6-slot (0-5) token inventory space.
         for (int i = 0; i < 6; i++) {
             // Bypass logic for unheld token variants, preventing negative deficit calculations
-            if (player.getMycoins()[i] <= 0)
+            if (player.getMyCoins()[i] <= 0)
                 continue;
             // Extrapolate deficit mapping excluding Gold token anomalies (index 5)
             int n = (i < 5) ? need[i] : 0; 
             // Calculate absolute waste gap between possessed stock vs projected structural needs
-            int excess = player.getMycoins()[i] - n;
+            int excess = player.getMyCoins()[i] - n;
             // Maximize isolation algorithm
             if (excess > bestExcess) {
                 bestExcess = excess;
@@ -265,7 +265,7 @@ public class AIPlayer implements Serializable {
                 continue;
             int total = 0;
             for (int i = 0; i < 5; i++) {
-                total += Math.max(0, c.getCost()[i] - player.getMycards()[i] - player.getMycoins()[i]);
+                total += Math.max(0, c.getCost()[i] - player.getMyCards()[i] - player.getMyCoins()[i]);
             }
             if (total < minTotalCost) {
                 minTotalCost = total;
@@ -275,7 +275,7 @@ public class AIPlayer implements Serializable {
 
         if (target != null) {
             for (int i = 0; i < 5; i++) {
-                need[i] = Math.max(0, target.getCost()[i] - player.getMycards()[i] - player.getMycoins()[i]);
+                need[i] = Math.max(0, target.getCost()[i] - player.getMyCards()[i] - player.getMyCoins()[i]);
             }
         }
         return need;

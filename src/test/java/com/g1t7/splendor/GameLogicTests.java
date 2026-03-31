@@ -86,9 +86,9 @@ class GameLogicTests {
     void take3DifferentCoins() {
         boolean ok = p1.exchangeCoin(List.of("WHITE", "BLUE", "GREEN"));
         assertTrue(ok, "Taking 3 different should succeed");
-        assertEquals(1, p1.getMycoins()[0]); // white
-        assertEquals(1, p1.getMycoins()[1]); // blue
-        assertEquals(1, p1.getMycoins()[2]); // green
+        assertEquals(1, p1.getMyCoins()[0]); // white
+        assertEquals(1, p1.getMyCoins()[1]); // blue
+        assertEquals(1, p1.getMyCoins()[2]); // green
         assertEquals(3, game.getBankCoins()[0]);
         assertEquals(3, game.getBankCoins()[1]);
         assertEquals(3, game.getBankCoins()[2]);
@@ -98,7 +98,7 @@ class GameLogicTests {
     void take2SameColor() {
         boolean ok = p1.exchangeCoin(List.of("RED", "RED"));
         assertTrue(ok, "Taking 2 red should succeed (bank has 4)");
-        assertEquals(2, p1.getMycoins()[3]);
+        assertEquals(2, p1.getMyCoins()[3]);
         assertEquals(2, game.getBankCoins()[3]);
     }
 
@@ -124,9 +124,9 @@ class GameLogicTests {
     @Test
     void canTakeCoinsOver10ThenDiscard() {
         // Give player 9 coins already
-        p1.getMycoins()[0] = 3; // WHITE
-        p1.getMycoins()[1] = 3; // BLUE
-        p1.getMycoins()[2] = 3; // GREEN
+        p1.getMyCoins()[0] = 3; // WHITE
+        p1.getMyCoins()[1] = 3; // BLUE
+        p1.getMyCoins()[2] = 3; // GREEN
         // Taking 3 more (total = 12) should succeed
         boolean ok = p1.exchangeCoin(List.of("RED", "GREEN", "BLACK"));
         assertTrue(ok, "Should allow taking coins over 10");
@@ -160,36 +160,36 @@ class GameLogicTests {
     @Test
     void buyCardDeductsCoinsAndAddsBonus() {
         Card card = new Card(1, GemColor.WHITE, 1, new int[] { 1, 1, 1, 0, 0, 0 });
-        p1.getMycoins()[0] = 2; // white
-        p1.getMycoins()[1] = 2; // blue
-        p1.getMycoins()[2] = 2; // green
+        p1.getMyCoins()[0] = 2; // white
+        p1.getMyCoins()[1] = 2; // blue
+        p1.getMyCoins()[2] = 2; // green
 
         boolean ok = p1.buyCard(card);
         assertTrue(ok);
         assertEquals(1, p1.getScore(), "Should gain 1 VP");
-        assertEquals(1, p1.getMycards()[0], "Should gain white bonus");
-        assertEquals(1, p1.getMycoins()[0], "Should have 1 white left");
-        assertEquals(1, p1.getMycoins()[1], "Should have 1 blue left");
-        assertEquals(1, p1.getMycoins()[2], "Should have 1 green left");
+        assertEquals(1, p1.getMyCards()[0], "Should gain white bonus");
+        assertEquals(1, p1.getMyCoins()[0], "Should have 1 white left");
+        assertEquals(1, p1.getMyCoins()[1], "Should have 1 blue left");
+        assertEquals(1, p1.getMyCoins()[2], "Should have 1 green left");
     }
 
     @Test
     void buyCardUsesGoldForShortfall() {
         Card card = new Card(1, GemColor.BLUE, 0, new int[] { 2, 0, 0, 0, 0, 0 });
-        p1.getMycoins()[0] = 1; // 1 white, need 2
-        p1.getMycoins()[5] = 2; // 2 gold
+        p1.getMyCoins()[0] = 1; // 1 white, need 2
+        p1.getMyCoins()[5] = 2; // 2 gold
 
         boolean ok = p1.buyCard(card);
         assertTrue(ok, "Should use 1 gold to cover shortfall");
-        assertEquals(0, p1.getMycoins()[0], "All white spent");
-        assertEquals(1, p1.getMycoins()[5], "1 gold spent, 1 remaining");
+        assertEquals(0, p1.getMyCoins()[0], "All white spent");
+        assertEquals(1, p1.getMyCoins()[5], "1 gold spent, 1 remaining");
     }
 
     @Test
     void buyCardAppliesBonusDiscount() {
         Card card = new Card(2, GemColor.GREEN, 2, new int[] { 3, 0, 0, 0, 0, 0 });
-        p1.getMycards()[0] = 2; // 2 white bonuses → effective cost = 1 white
-        p1.getMycoins()[0] = 1;
+        p1.getMyCards()[0] = 2; // 2 white bonuses → effective cost = 1 white
+        p1.getMyCoins()[0] = 1;
 
         boolean ok = p1.buyCard(card);
         assertTrue(ok, "Bonus should reduce cost from 3 to 1");
@@ -199,7 +199,7 @@ class GameLogicTests {
     @Test
     void buyCardFailsIfCannotAfford() {
         Card card = new Card(1, GemColor.RED, 0, new int[] { 5, 0, 0, 0, 0, 0 });
-        p1.getMycoins()[0] = 1; // only 1 white, need 5
+        p1.getMyCoins()[0] = 1; // only 1 white, need 5
         boolean ok = p1.buyCard(card);
         assertFalse(ok, "Should not afford this card");
     }
@@ -207,7 +207,7 @@ class GameLogicTests {
     @Test
     void buyCardReturnsCoinsToBank() {
         Card card = new Card(1, GemColor.WHITE, 0, new int[] { 2, 0, 0, 0, 0, 0 });
-        p1.getMycoins()[0] = 3;
+        p1.getMyCoins()[0] = 3;
         int bankWhiteBefore = game.getBankCoins()[0];
 
         p1.buyCard(card);
@@ -225,7 +225,7 @@ class GameLogicTests {
         boolean ok = p1.escortCard(card);
         assertTrue(ok);
         assertEquals(1, p1.getReservedCards().size());
-        assertEquals(1, p1.getMycoins()[5], "Should receive 1 gold");
+        assertEquals(1, p1.getMyCoins()[5], "Should receive 1 gold");
         assertEquals(goldBefore - 1, game.getBankCoins()[5]);
         assertTrue(card.isReserved());
     }
@@ -246,7 +246,7 @@ class GameLogicTests {
         game.getBankCoins()[5] = 0; // no gold
         Card card = game.getVisibleCards().get(0);
         p1.escortCard(card);
-        assertEquals(0, p1.getMycoins()[5], "No gold if bank is empty");
+        assertEquals(0, p1.getMyCoins()[5], "No gold if bank is empty");
     }
 
     // ===================== Noble Visit =====================
@@ -256,7 +256,7 @@ class GameLogicTests {
         Noble noble = new Noble(3, 0, 0, 0, 0); // requires 3 white cards
         game.setActiveNobles(new java.util.ArrayList<>(List.of(noble)));
 
-        p1.getMycards()[0] = 3; // 3 white bonuses
+        p1.getMyCards()[0] = 3; // 3 white bonuses
         p1.checkNobles(game.getActiveNobles());
 
         assertEquals(3, p1.getScore(), "Should gain 3 VP from noble");
@@ -268,7 +268,7 @@ class GameLogicTests {
         Noble noble = new Noble(4, 0, 0, 0, 0); // requires 4 white
         game.setActiveNobles(new java.util.ArrayList<>(List.of(noble)));
 
-        p1.getMycards()[0] = 2;
+        p1.getMyCards()[0] = 2;
         p1.checkNobles(game.getActiveNobles());
 
         assertEquals(0, p1.getScore());
@@ -281,8 +281,8 @@ class GameLogicTests {
         Noble n2 = new Noble(0, 1, 0, 0, 0);
         game.setActiveNobles(new java.util.ArrayList<>(List.of(n1, n2)));
 
-        p1.getMycards()[0] = 3;
-        p1.getMycards()[1] = 3;
+        p1.getMyCards()[0] = 3;
+        p1.getMyCards()[1] = 3;
         p1.checkNobles(game.getActiveNobles());
 
         assertEquals(3, p1.getScore(), "Should gain only 3 VP (one noble)");
@@ -298,7 +298,7 @@ class GameLogicTests {
         assertFalse(game.isGameOver(), "Game should NOT be over before round ends");
 
         // Simulate changeTurns from P1's perspective
-        game.setNowTurn(0);
+        game.setCurrentTurnIndex(0);
         game.changeTurns(); // now P2's turn, finalRound triggered
         assertFalse(game.isGameOver(), "P2 should get a turn before game ends");
 
