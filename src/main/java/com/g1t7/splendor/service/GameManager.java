@@ -1,11 +1,11 @@
-package com.g1t7.splendor;
+package com.g1t7.splendor.service;
 
-import com.g1t7.splendor.model.AIPlayer;
 import com.g1t7.splendor.model.Card;
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +19,12 @@ public class GameManager {
     private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     private final Map<String, Game> games = new ConcurrentHashMap<>();
     private static final long ROOM_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+
+    @Autowired
+    private GameEngineService gameEngineService;
+
+    @Autowired
+    private AIPlayer aiPlayer;
 
     public String createGame(Game game) {
         String roomId = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
@@ -55,8 +61,8 @@ public class GameManager {
                 player.setAi(true);
                 player.setName(player.getName() + " (CPU Replaced)");
                 if (game.getCurrentPlayer() == player) {
-                    AIPlayer.takeTurn(game, player);
-                    game.changeTurns();
+                    aiPlayer.takeTurn(game, player);
+                    gameEngineService.changeTurns(game);
                 }
                 return true;
             }
@@ -74,8 +80,8 @@ public class GameManager {
 
                 // Return coins to bank
                 for (int i = 0; i < Game.TOTAL_COIN_TYPES; i++) {
-                    game.getBankCoins()[i] += player.getMyCoins()[i];
-                    player.getMyCoins()[i] = 0;
+                    game.getBankCoins()[i] += player.getCoins()[i];
+                    player.getCoins()[i] = 0;
                 }
 
                 // Return reserved cards to top of decks
@@ -94,7 +100,7 @@ public class GameManager {
                 player.setName(player.getName() + " (EJECTED)");
 
                 if (game.getCurrentPlayer() == player) {
-                    game.changeTurns();
+                    gameEngineService.changeTurns(game);
                 }
                 return true;
             }

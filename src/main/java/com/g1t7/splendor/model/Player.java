@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
 
+/**
+ * Represents a player in the Splendor game.
+ * This is a pure data model (POJO) containing the player's state.
+ */
 public class Player implements Serializable {
 
     // --- CONSTANTS ---
@@ -13,13 +17,15 @@ public class Player implements Serializable {
     public static final int TOTAL_COIN_TYPES = 6;
     public static final int REGULAR_GEM_TYPES = 5;
 
-    private Game game;
     private boolean online = true;
     private boolean ai = false;
     private String name;
     private int score;
-    private int[] myCoins = new int[TOTAL_COIN_TYPES];
-    private int[] myCards = new int[REGULAR_GEM_TYPES];
+
+    // Clean Code: Renamed from 'myCoins' and 'myCards'
+    private int[] coins = new int[TOTAL_COIN_TYPES];
+    private int[] bonuses = new int[REGULAR_GEM_TYPES];
+
     private List<Card> reservedCards = new ArrayList<>();
     private Stack<Card> cards = new Stack<>();
     private List<Noble> obtainedNobles = new ArrayList<>();
@@ -33,38 +39,41 @@ public class Player implements Serializable {
     public Player() {
     }
 
-    public Player(Game game, String name) {
-        this.game = game;
+    // FIXED: Removed the 'Game' object from the constructor to break the circular
+    // dependency
+    public Player(String name) {
         this.name = name;
     }
 
-    public Player(Game game, String name, boolean ai) {
-        this.game = game;
+    public Player(String name, boolean ai) {
         this.name = name;
         this.ai = ai;
     }
 
+    /**
+     * Checks if a human player has timed out due to inactivity.
+     * 
+     * @return true if the player has disconnected, false otherwise.
+     */
     public boolean isDisconnected() {
         if (ai || isEjected)
             return false;
         return (System.currentTimeMillis() - lastHeartbeat) > DISCONNECT_TIMEOUT_MS;
     }
 
+    /**
+     * Calculates the total number of coins currently held by the player.
+     * 
+     * @return the total coin count.
+     */
     public int getTotalCoins() {
         int total = 0;
-        for (int c : myCoins)
+        for (int c : coins)
             total += c;
         return total;
     }
 
     // --- GETTERS AND SETTERS ---
-    public Game getGame() {
-        return game;
-    }
-
-    public void setGame(Game game) {
-        this.game = game;
-    }
 
     public boolean isOnline() {
         return online;
@@ -98,20 +107,21 @@ public class Player implements Serializable {
         this.score = score;
     }
 
-    public int[] getMyCoins() {
-        return myCoins;
+    // FIXED: Renamed Getters/Setters
+    public int[] getCoins() {
+        return coins;
     }
 
-    public void setMyCoins(int[] myCoins) {
-        this.myCoins = myCoins;
+    public void setCoins(int[] coins) {
+        this.coins = coins;
     }
 
-    public int[] getMyCards() {
-        return myCards;
+    public int[] getBonuses() {
+        return bonuses;
     }
 
-    public void setMyCards(int[] myCards) {
-        this.myCards = myCards;
+    public void setBonuses(int[] bonuses) {
+        this.bonuses = bonuses;
     }
 
     public List<Card> getReservedCards() {

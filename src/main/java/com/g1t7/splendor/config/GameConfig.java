@@ -1,14 +1,18 @@
-package com.g1t7.splendor.model;
+package com.g1t7.splendor.config;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.Properties;
 
 /**
  * Reads game parameters from resources/config.properties.
- * Falls back to Splendor default values when a key is missing.
+ * Falls back to Splendor default values when a key or file is missing.
  */
 public class GameConfig implements Serializable {
 
+    private static final Logger logger = LoggerFactory.getLogger(GameConfig.class);
     private static final String CONFIG_PATH = "game/config/config.properties";
 
     private int winScore = 15;
@@ -34,20 +38,20 @@ public class GameConfig implements Serializable {
 
     private void load() {
         Properties props = new Properties();
-        // Try file-system path first, then classpath
         File file = new File(CONFIG_PATH);
+
         if (file.exists()) {
             try (InputStream is = new FileInputStream(file)) {
                 props.load(is);
             } catch (IOException e) {
-                System.err.println("[GameConfig] Error loading config from file: " + CONFIG_PATH);
+                logger.error("Error loading config from file: {}", CONFIG_PATH, e);
             }
         } else {
             try (InputStream is = getClass().getClassLoader().getResourceAsStream(GameConfig.CONFIG_PATH)) {
                 if (is != null)
                     props.load(is);
             } catch (IOException e) {
-                System.err.println("[GameConfig] Error loading config from classpath: " + GameConfig.CONFIG_PATH);
+                logger.error("Error loading config from classpath: {}", GameConfig.CONFIG_PATH, e);
             }
         }
 
@@ -61,15 +65,10 @@ public class GameConfig implements Serializable {
         nobles3Players = getInt(props, "nobles_3_players", nobles3Players);
         nobles4Players = getInt(props, "nobles_4_players", nobles4Players);
 
-        System.out.println("[GameConfig] Read config\n\twinScore=" + winScore
-                + "\n\tcardFile=" + cardFile
-                + "\n\tnobleFile=" + nobleFile
-                + "\n\tgems2Players=" + gems2Players
-                + "\n\tgems3Players=" + gems3Players
-                + "\n\tgems4Players=" + gems4Players
-                + "\n\tnobles2Players=" + nobles2Players
-                + "\n\tnobles3Players=" + nobles3Players
-                + "\n\tnobles4Players=" + nobles4Players);
+        logger.info(
+                "Loaded Configuration: winScore={}, cards={}, nobles={}, gems(2/3/4)={}/{}/{}, nobles(2/3/4)={}/{}/{}",
+                winScore, cardFile, nobleFile, gems2Players, gems3Players, gems4Players, nobles2Players, nobles3Players,
+                nobles4Players);
     }
 
     private int getInt(Properties props, String key, int defaultVal) {
@@ -83,16 +82,14 @@ public class GameConfig implements Serializable {
         }
     }
 
-    /** Returns the initial gem count for the given number of players (2-4). */
     public int getGemCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> gems3Players;
             case 4 -> gems4Players;
-            default -> gems2Players; // 2 players is the default
+            default -> gems2Players;
         };
     }
 
-    /** Returns the number of nobles for the given number of players (2-4). */
     public int getNobleCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> nobles3Players;
@@ -101,7 +98,6 @@ public class GameConfig implements Serializable {
         };
     }
 
-    // Getters
     public int getWinScore() {
         return winScore;
     }

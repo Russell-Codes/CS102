@@ -2,9 +2,10 @@ package com.g1t7.splendor.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import com.g1t7.splendor.config.GameConfig;
 
 public class Game implements Serializable {
 
@@ -24,7 +25,6 @@ public class Game implements Serializable {
 
     private Card pendingCard = null;
     private int currentTurnIndex = 0;
-    private int startingPlayer = 0;
     private String message = "";
     private boolean finalRound = false;
     private boolean gameOver = false;
@@ -42,115 +42,16 @@ public class Game implements Serializable {
         config = new GameConfig();
     }
 
-    public void variableInit() {
-        int numPlayers = Math.max(players.size(), 2);
-
-        initBank(numPlayers);
-        initDecks();
-        initBoard();
-        initNobles(numPlayers);
-    }
-
-    private void initBank(int numPlayers) {
-        int gemCount = config.getGemCount(numPlayers);
-        int goldCount = config.getGoldCoins();
-        bankCoins = new int[] { gemCount, gemCount, gemCount, gemCount, gemCount, goldCount };
-    }
-
-    private void initDecks() {
-        List<Card> allCards = CardData.buildDeck(config.getCardFile());
-        for (Card c : allCards) {
-            if (c.getTier() == 1)
-                tier1Deck.add(c);
-            else if (c.getTier() == 2)
-                tier2Deck.add(c);
-            else
-                tier3Deck.add(c);
-        }
-        Collections.shuffle(tier1Deck);
-        Collections.shuffle(tier2Deck);
-        Collections.shuffle(tier3Deck);
-    }
-
-    private void initBoard() {
-        for (int i = 0; i < TOTAL_VISIBLE_CARDS; i++) {
-            visibleCards.add(null);
-        }
-        for (int slot = 0; slot < VISIBLE_CARDS_PER_TIER; slot++)
-            dealSlot(slot);
-        for (int slot = VISIBLE_CARDS_PER_TIER; slot < VISIBLE_CARDS_PER_TIER * 2; slot++)
-            dealSlot(slot);
-        for (int slot = VISIBLE_CARDS_PER_TIER * 2; slot < TOTAL_VISIBLE_CARDS; slot++)
-            dealSlot(slot);
-    }
-
-    private void initNobles(int numPlayers) {
-        int nobleCount = config.getNobleCount(numPlayers);
-        List<Noble> allNobles = NobleData.buildNobles(config.getNobleFile());
-        Collections.shuffle(allNobles);
-        activeNobles = new ArrayList<>(allNobles.subList(0, Math.min(nobleCount, allNobles.size())));
-    }
-
-    private void dealSlot(int slot) {
-        List<Card> deck = deckForSlot(slot);
-        if (!deck.isEmpty()) {
-            visibleCards.set(slot, deck.remove(deck.size() - 1));
-        }
-    }
-
-    private List<Card> deckForSlot(int slot) {
-        if (slot < VISIBLE_CARDS_PER_TIER)
-            return tier1Deck;
-        if (slot < VISIBLE_CARDS_PER_TIER * 2)
-            return tier2Deck;
-        return tier3Deck;
-    }
-
-    public void changeTurns() {
-        this.lastActivityTime = System.currentTimeMillis();
-        pendingCard = null;
-        message = "";
-
-        if (!finalRound && getCurrentPlayer().getScore() >= config.getWinScore()) {
-            finalRound = true;
-        }
-
-        int nextTurn = currentTurnIndex;
-        int attempts = 0;
-        do {
-            nextTurn = (nextTurn + 1) % players.size();
-            attempts++;
-        } while (players.get(nextTurn).isEjected() && attempts < players.size());
-
-        if (attempts >= players.size() || (finalRound && nextTurn == startingPlayer)) {
-            gameOver = true;
-            return;
-        }
-
-        currentTurnIndex = nextTurn;
-
-        Player next = getCurrentPlayer();
-        if (next.isAi() && !gameOver) {
-            boolean acted = AIPlayer.takeTurn(this, next);
-            if (acted)
-                changeTurns();
-        }
-    }
-
     public Player getCurrentPlayer() {
         return players.get(currentTurnIndex);
     }
 
-    public void replenishCard(int slotIndex) {
-        List<Card> deck = deckForSlot(slotIndex);
-        if (!deck.isEmpty())
-            visibleCards.set(slotIndex, deck.remove(deck.size() - 1));
-        else
-            visibleCards.set(slotIndex, null);
-    }
-
     public boolean isGameOver() {
         return gameOver;
+    }
+
+    public void setGameOver(boolean gameOver) {
+        this.gameOver = gameOver;
     }
 
     public Player getWinner() {
@@ -252,6 +153,10 @@ public class Game implements Serializable {
 
     public boolean isFinalRound() {
         return finalRound;
+    }
+
+    public void setFinalRound(boolean finalRound) {
+        this.finalRound = finalRound;
     }
 
     public boolean isPendingDiscard() {

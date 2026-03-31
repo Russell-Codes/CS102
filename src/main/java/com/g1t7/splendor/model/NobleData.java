@@ -3,37 +3,49 @@ package com.g1t7.splendor.model;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
+import com.g1t7.splendor.config.GameConfig;
+
 /**
- * Loads Noble tiles from an external CSV file specified in config.properties.
+ * Factory class that loads Noble tiles from an external CSV file.
  * Falls back to a standard hardcoded list if the CSV cannot be read.
  */
 public class NobleData {
 
+    private static final Logger logger = LoggerFactory.getLogger(NobleData.class);
+    private static final int EXPECTED_CSV_COLUMNS = 8;
+
     private NobleData() {
     }
 
+    /**
+     * Builds the full list of Nobles from the configured CSV path.
+     * * @param csvPath The classpath location of the CSV file.
+     * 
+     * @return A list of initialized Noble objects.
+     */
     public static List<Noble> buildNobles(String csvPath) {
         List<Noble> nobles = new ArrayList<>();
 
         try (InputStream is = new ClassPathResource(csvPath).getInputStream();
                 BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
 
-            String line;
-            br.readLine(); // skip header
+            String line = br.readLine(); // skip header
 
             while ((line = br.readLine()) != null) {
-                if (line.isEmpty())
+                if (line.trim().isEmpty())
                     continue;
 
                 // Use -1 to keep empty strings (since Points column is empty in nobles.csv)
                 String[] parts = line.split(",", -1);
-                if (parts.length < 8)
+                if (parts.length < EXPECTED_CSV_COLUMNS)
                     continue;
 
                 try {
-                    // parts: ID, Name, Points, White, Blue, Green, Red, Black
                     int white = Integer.parseInt(parts[3].trim());
                     int blue = Integer.parseInt(parts[4].trim());
                     int green = Integer.parseInt(parts[5].trim());
@@ -42,11 +54,11 @@ public class NobleData {
 
                     nobles.add(new Noble(white, blue, green, red, black));
                 } catch (Exception e) {
-                    System.err.println("[NobleData] Skipping malformed line: " + line);
+                    logger.warn("Skipping malformed line in Nobles CSV: {}", line);
                 }
             }
         } catch (IOException e) {
-            System.err.println("[NobleData] CSV not found at classpath:" + csvPath + " - using fallback nobles");
+            logger.error("CSV not found at classpath: {} - using fallback nobles", csvPath);
             return buildFallbackNobles();
         }
 
@@ -54,7 +66,7 @@ public class NobleData {
             return buildFallbackNobles();
         }
 
-        System.out.println("[NobleData] Loaded " + nobles.size() + " nobles from " + csvPath);
+        logger.info("Loaded {} nobles from {}", nobles.size(), csvPath);
         return nobles;
     }
 

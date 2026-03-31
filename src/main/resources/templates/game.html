@@ -263,7 +263,7 @@
               <div class="flex flex-wrap gap-4">
                 <div
                   th:each="i : ${#numbers.sequence(0, 5)}"
-                  th:if="${game.currentPlayer.getMyCoins()[i] > 0}"
+                  th:if="${game.currentPlayer.getCoins()[i] > 0}"
                   class="flex flex-col items-center gap-2"
                 >
                   <div
@@ -271,7 +271,7 @@
                   >
                     <span
                       class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-white/20"
-                      th:text="${game.currentPlayer.getMyCoins()[i]}"
+                      th:text="${game.currentPlayer.getCoins()[i]}"
                     ></span>
                   </div>
                   <form
@@ -451,9 +451,9 @@
               <div class="flex flex-wrap gap-1">
                 <span
                   th:each="i : ${#numbers.sequence(0, 5)}"
-                  th:if="${p.getMyCoins()[i] > 0}"
+                  th:if="${p.getCoins()[i] > 0}"
                   th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
-                  th:text="${p.getMyCoins()[i]}"
+                  th:text="${p.getCoins()[i]}"
                 ></span>
                 <span
                   th:if="${p.getTotalCoins() == 0}"
@@ -471,12 +471,12 @@
               <div class="flex flex-wrap gap-1">
                 <span
                   th:each="i : ${#numbers.sequence(0, 4)}"
-                  th:if="${p.getMyCards()[i] > 0}"
+                  th:if="${p.getBonuses()[i] > 0}"
                   th:class="'cost-icon border-none rounded-sm gem-' + ${game.gemColorName(i)}"
-                  th:text="'+' + ${p.getMyCards()[i]}"
+                  th:text="'+' + ${p.getBonuses()[i]}"
                 ></span>
                 <span
-                  th:if="${p.getMyCards()[0]+p.getMyCards()[1]+p.getMyCards()[2]+p.getMyCards()[3]+p.getMyCards()[4] == 0}"
+                  th:if="${p.getBonuses()[0]+p.getBonuses()[1]+p.getBonuses()[2]+p.getBonuses()[3]+p.getBonuses()[4] == 0}"
                   class="text-slate-600 italic"
                   >None</span
                 >

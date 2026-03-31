@@ -1,7 +1,10 @@
-package com.g1t7.splendor;
+package com.g1t7.splendor.controller;
 
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
+import com.g1t7.splendor.service.GameManager;
+import com.g1t7.splendor.service.LobbyService;
+
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -9,14 +12,16 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
-
 @Controller
 @RequestMapping("/lobby/{roomId}")
 public class LobbyController {
 
     @Autowired
     private GameManager gameManager;
+
+    @Autowired
+    private LobbyService lobbyService;
+
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -27,9 +32,7 @@ public class LobbyController {
             return "redirect:/?error=notfound";
 
         String myUuid = (String) session.getAttribute("userUuid");
-        Player me = game.getPlayers().stream()
-                .filter(p -> p.getUuid() != null && p.getUuid().equals(myUuid))
-                .findFirst().orElse(null);
+        Player me = lobbyService.getPlayerByUuid(game, myUuid);
 
         // Direct URL Hacking Bouncer
         if (me == null && game.getPlayers().size() >= game.getCapacity()) {
@@ -56,72 +59,55 @@ public class LobbyController {
 
     @PostMapping("/ready")
     public String setReady(@PathVariable String roomId, @RequestParam String playerName, HttpSession session) {
-        Game game = gameManager.getGame(roomId);
-        if (game == null || game.isStarted())
-            return "redirect:/";
-
         String myUuid = (String) session.getAttribute("userUuid");
-        Player me = game.getPlayers().stream().filter(p -> p.getUuid().equals(myUuid)).findFirst().orElse(null);
+        Game game = gameManager.getGame(roomId);
 
-        if (me == null) {
-            if (game.getPlayers().size() < game.getCapacity()) {
-                me = new Player(game, playerName.trim());
-                me.setUuid(myUuid);
-                game.getPlayers().add(me);
-            } else {
-                return "redirect:/lobby/" + roomId + "?error=full";
-            }
-        } else {
-            me.setName(playerName.trim());
+        // Fail fast if attempting to join a full room via direct POST
+        if (game != null && lobbyService.getPlayerByUuid(game, myUuid) == null
+                && game.getPlayers().size() >= game.getCapacity()) {
+            return "redirect:/lobby/" + roomId + "?error=full";
         }
 
-        me.setReady(true);
-        messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        if (lobbyService.joinOrUpdatePlayer(roomId, myUuid, playerName)) {
+            refreshRoom(roomId);
+        }
         return "redirect:/lobby/" + roomId;
     }
 
     @PostMapping("/add-ai")
     public String addAi(@PathVariable String roomId, HttpSession session) {
-        Game game = gameManager.getGame(roomId);
         String myUuid = (String) session.getAttribute("userUuid");
 
-        if (game != null && game.getHostUuid().equals(myUuid) && game.getPlayers().size() < game.getCapacity()) {
-            int aiCount = (int) game.getPlayers().stream().filter(Player::isAi).count() + 1;
-            Player aiPlayer = new Player(game, "CPU " + aiCount, true);
-            aiPlayer.setUuid(UUID.randomUUID().toString()); // So we can target it for removal
-            aiPlayer.setReady(true);
-
-            game.getPlayers().add(aiPlayer);
-            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        if (lobbyService.addAi(roomId, myUuid)) {
+            refreshRoom(roomId);
         }
         return "redirect:/lobby/" + roomId;
     }
 
     @PostMapping("/remove-ai")
     public String removeAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
-        Game game = gameManager.getGame(roomId);
         String myUuid = (String) session.getAttribute("userUuid");
 
-        if (game != null && game.getHostUuid().equals(myUuid)) {
-            game.getPlayers().removeIf(p -> p.isAi() && p.getUuid().equals(targetUuid));
-            messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+        if (lobbyService.removeAi(roomId, myUuid, targetUuid)) {
+            refreshRoom(roomId);
         }
         return "redirect:/lobby/" + roomId;
     }
 
     @PostMapping("/start")
     public String startGame(@PathVariable String roomId, HttpSession session) {
-        Game game = gameManager.getGame(roomId);
         String myUuid = (String) session.getAttribute("userUuid");
 
-        if (game != null && game.getHostUuid().equals(myUuid) && game.getPlayers().size() == game.getCapacity()) {
-            boolean allReady = game.getPlayers().stream().allMatch(Player::isReady);
-            if (allReady) {
-                game.setStarted(true);
-                game.variableInit();
-                messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
-            }
+        if (lobbyService.startGame(roomId, myUuid)) {
+            refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
+    }
+
+    /**
+     * Helper method to broadcast a websocket refresh command.
+     */
+    private void refreshRoom(String roomId) {
+        messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
     }
 }
