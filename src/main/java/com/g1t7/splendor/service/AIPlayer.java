@@ -36,6 +36,9 @@ public class AIPlayer {
         return tryTakeCoins(game, player);
     }
 
+    /**
+     * Tries to buy the highest-value card the AI can currently afford.
+     */
     private boolean tryBuyBestCard(Game game, Player player) {
         Card bestCard = null;
 
@@ -63,6 +66,9 @@ public class AIPlayer {
         return actionService.buyCard(game, player, bestCard);
     }
 
+    /**
+     * Tries to reserve a strong visible card when buying is not possible.
+     */
     private boolean tryReserveCard(Game game, Player player) {
         if (player.getReservedCards().size() >= 3)
             return false;
@@ -91,6 +97,9 @@ public class AIPlayer {
         return isSuccessful;
     }
 
+    /**
+     * Discards one coin that appears least useful for the AI's current target.
+     */
     private void autoDiscard(Game game, Player player) {
         int[] need = computeNeeds(game, player);
         int bestIdx = -1;
@@ -113,32 +122,34 @@ public class AIPlayer {
         }
     }
 
+    /**
+     * Tries to take coins legally, preferring 3 distinct colors needed for a near target card.
+     */
     private boolean tryTakeCoins(Game game, Player player) {
-        if (player.getTotalCoins() >= MAX_COIN_LIMIT)
-            return true;
-
         int[] bankCoins = game.getBankCoins();
         int[] need = computeNeeds(game, player);
         List<String> selection = new ArrayList<>();
-        int remaining = Math.min(3, MAX_COIN_LIMIT - player.getTotalCoins());
 
-        for (int i = 0; i < REGULAR_GEM_TYPES && selection.size() < remaining; i++) {
+        // 1. Always attempt to take exactly 3 distinct colors
+        for (int i = 0; i < REGULAR_GEM_TYPES && selection.size() < 3; i++) {
             if (need[i] > 0 && bankCoins[i] >= 1) {
                 selection.add(GemColor.fromIndex(i).name());
             }
         }
 
-        for (int i = 0; i < REGULAR_GEM_TYPES && selection.size() < remaining; i++) {
+        // Fill up to 3 if we haven't reached it, based on bank availability
+        for (int i = 0; i < REGULAR_GEM_TYPES && selection.size() < 3; i++) {
             String name = GemColor.fromIndex(i).name();
             if (!selection.contains(name) && bankCoins[i] >= 1) {
                 selection.add(name);
             }
         }
 
-        if (selection.size() <= 1) {
+        // 2. If we couldn't get 3 distinct colors, try taking 2 of the same color
+        if (selection.size() < 3) {
+            selection.clear(); // Taking 1 or 2 distinct colors is illegal
             for (int i = 0; i < REGULAR_GEM_TYPES; i++) {
-                if (bankCoins[i] >= 4 && player.getTotalCoins() + 2 <= MAX_COIN_LIMIT) {
-                    selection.clear();
+                if (bankCoins[i] >= 4) {
                     String name = GemColor.fromIndex(i).name();
                     selection.add(name);
                     selection.add(name);
@@ -147,17 +158,26 @@ public class AIPlayer {
             }
         }
 
+        // 3. If neither action is possible, fail the coin take (AI will fall back to
+        // reserving a card)
         if (selection.isEmpty()) {
-            // If no coin move is possible, drop one coin to avoid stalling.
-            if (player.getTotalCoins() > 0) {
-                autoDiscard(game, player);
-            }
-            return true;
+            return false;
         }
 
-        return actionService.exchangeCoin(game, player, selection);
+        // 4. Process the take and handle end-of-turn discard if over 10 coins
+        boolean isSuccessful = actionService.exchangeCoin(game, player, selection);
+        if (isSuccessful) {
+            while (player.getTotalCoins() > MAX_COIN_LIMIT) {
+                autoDiscard(game, player);
+            }
+        }
+
+        return isSuccessful;
     }
 
+    /**
+     * Estimates missing gem counts for the cheapest reachable visible card.
+     */
     private int[] computeNeeds(Game game, Player player) {
         int[] need = new int[REGULAR_GEM_TYPES];
         Card targetCard = null;

@@ -38,20 +38,21 @@ public class Game {
     private boolean started = false;
     private String hostUuid;
     private long lastActivityTime = System.currentTimeMillis();
+    private final long MAX_IDLE_TIME_MS = 30000; // 30 seconds
 
     public Game() {
         config = new GameConfig();
     }
 
     /**
-        * @return player whose turn it is
+     * @return player whose turn it is
      */
     public Player getCurrentPlayer() {
         return players.get(currentTurnIndex);
     }
 
     /**
-        * @return true when the game has ended
+     * @return true when the game has ended
      */
     public boolean isGameOver() {
         return gameOver;
@@ -62,24 +63,26 @@ public class Game {
     }
 
     /**
-        * Picks a winner by score, then by fewer bought cards on ties.
+     * Picks a winner by score, then by fewer bought cards on ties.
+     * Ignores any players who have been ejected.
      */
     public Player getWinner() {
         return players.stream()
+                .filter(p -> !p.isEjected()) // <-- ADD THIS LINE to disqualify ejected players
                 .max(Comparator.comparingInt(Player::getScore)
                         .thenComparing(Comparator.comparingInt((Player p) -> p.getCards().size()).reversed()))
                 .orElse(players.get(0));
     }
 
     /**
-        * Converts a gem index to a lowercase name for the UI.
+     * Converts a gem index to a lowercase name for the UI.
      */
     public String gemColorName(int i) {
         return GemColor.fromIndex(i).name().toLowerCase();
     }
 
     /**
-        * Returns the four visible cards for one tier.
+     * Returns the four visible cards for one tier.
      */
     public List<Card> getVisibleCardsForTier(int tier) {
         int start = (tier - 1) * VISIBLE_CARDS_PER_TIER;
@@ -87,7 +90,7 @@ public class Game {
     }
 
     /**
-        * Returns remaining deck size for a tier.
+     * Returns remaining deck size for a tier.
      */
     public int getDeckSize(int tier) {
         if (tier == 1)
@@ -98,7 +101,19 @@ public class Game {
     }
 
     /**
-        * @return score that triggers the endgame
+     * Checks if the given player is the current player AND has been idle for > 3
+     * minutes.
+     */
+    public boolean isPlayerIdle(Player p) {
+        if (players.isEmpty() || p != getCurrentPlayer()) {
+            return false;
+        }
+        // 180000 ms = 3 minutes
+        return (System.currentTimeMillis() - lastActivityTime) > MAX_IDLE_TIME_MS;
+    }
+
+    /**
+     * @return score that triggers the endgame
      */
     public int getWinScore() {
         return config.getWinScore();

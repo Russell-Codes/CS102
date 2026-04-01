@@ -32,7 +32,7 @@ public class GameController {
     }
 
     /**
-        * Shows the game page if the room is valid and started.
+     * Shows the game page if the room is valid and started.
      */
     @GetMapping
     public String showGame(@PathVariable String roomId, Model model, HttpSession session) {
@@ -49,7 +49,7 @@ public class GameController {
     }
 
     /**
-        * Heartbeat endpoint so the server knows a player is still connected.
+     * Heartbeat endpoint so the server knows a player is still connected.
      */
     @PostMapping("/ping")
     @ResponseBody
@@ -68,7 +68,7 @@ public class GameController {
     }
 
     /**
-        * Host action: replace a player with AI.
+     * Host action: replace a player with AI.
      */
     @PostMapping("/host-action/ai")
     public String replaceWithAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
@@ -82,7 +82,7 @@ public class GameController {
     }
 
     /**
-        * Host action: eject a player.
+     * Host action: eject a player.
      */
     @PostMapping("/host-action/eject")
     public String ejectPlayer(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
@@ -96,7 +96,7 @@ public class GameController {
     }
 
     /**
-        * Current player takes coins.
+     * Current player takes coins.
      */
     @PostMapping("/take-coins")
     public String takeCoins(@PathVariable String roomId,
@@ -116,7 +116,7 @@ public class GameController {
     }
 
     /**
-        * Current player buys a card.
+     * Current player buys a card.
      */
     @PostMapping("/buy-card")
     public String buyCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex, HttpSession session) {
@@ -129,7 +129,7 @@ public class GameController {
     }
 
     /**
-        * Current player claims one of the pending nobles.
+     * Current player claims one of the pending nobles.
      */
     @PostMapping("/claim-noble")
     public String claimNoble(@PathVariable String roomId, @RequestParam("nobleIndex") int nobleIndex,
@@ -143,7 +143,7 @@ public class GameController {
     }
 
     /**
-        * Current player reserves a visible card.
+     * Current player reserves a visible card.
      */
     @PostMapping("/reserve-card")
     public String reserveCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex,
@@ -157,7 +157,7 @@ public class GameController {
     }
 
     /**
-        * Current player discards one coin while over the limit.
+     * Current player discards one coin while over the limit.
      */
     @PostMapping("/discard-coins")
     public String discardCoins(@PathVariable String roomId, @RequestParam("color") String color, HttpSession session) {
@@ -174,5 +174,18 @@ public class GameController {
      */
     private void refreshRoom(String roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+    }
+
+    /**
+     * Current player reserves a card blindly from a tier deck.
+     */
+    @PostMapping("/reserve-deck")
+    public String reserveFromDeck(@PathVariable String roomId, @RequestParam("tier") int tier, HttpSession session) {
+        String userUuid = (String) session.getAttribute("userUuid");
+
+        if (gamePlayService.reserveFromDeck(roomId, userUuid, tier)) {
+            refreshRoom(roomId);
+        }
+        return "redirect:/game/" + roomId;
     }
 }

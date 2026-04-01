@@ -10,7 +10,7 @@ public class Player {
 
     // --- CONSTANTS ---
     public static final int MAX_COIN_LIMIT = 10;
-    public static final int DISCONNECT_TIMEOUT_MS = 30000;
+    public static final int DISCONNECT_TIMEOUT_MS = 30000; // 30 seconds
     public static final int TOTAL_COIN_TYPES = GemColor.values().length; // Includes GOLD
     public static final int REGULAR_GEM_TYPES = GemColor.values().length - 1; // Exclude GOLD
 
@@ -99,16 +99,8 @@ public class Player {
         return coins;
     }
 
-    public void setCoins(int[] coins) {
-        this.coins = coins;
-    }
-
     public int[] getBonuses() {
         return bonuses;
-    }
-
-    public void setBonuses(int[] bonuses) {
-        this.bonuses = bonuses;
     }
 
     public List<Card> getReservedCards() {

@@ -80,8 +80,8 @@ public class PlayerActionService {
      * @return true if the exchange is legal and processed; false otherwise.
      */
     public boolean exchangeCoin(Game game, Player player, List<String> selectedColors) {
-        if (selectedColors == null || selectedColors.isEmpty() || selectedColors.size() > 3) {
-            game.setMessage("Select 1-3 coins.");
+        if (selectedColors == null || selectedColors.size() < 2 || selectedColors.size() > 3) {
+            game.setMessage("You must take exactly 3 distinct coins or 2 of the same color.");
             return false;
         }
 

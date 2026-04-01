@@ -63,12 +63,6 @@ public class GamePlayService {
         Card card = resolveCard(game, current, cardIndex);
 
         if (card != null && playerActionService.buyCard(game, current, card)) {
-            if (cardIndex >= 0) {
-                game.getVisibleCards().set(cardIndex, null);
-            } else {
-                current.getReservedCards().remove(card);
-            }
-
             if (!game.isPendingNobleChoice()) {
                 gameEngineService.changeTurns(game);
             }
@@ -115,8 +109,6 @@ public class GamePlayService {
             Card card = game.getVisibleCards().get(cardIndex);
 
             if (card != null && playerActionService.reserveCard(game, current, card)) {
-                game.getVisibleCards().set(cardIndex, null);
-
                 if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
                     game.setPendingDiscard(true);
                 } else {
@@ -148,6 +140,9 @@ public class GamePlayService {
 
     // --- Helper Methods ---
 
+    /**
+     * Gets the game and verifies that the requesting user owns the current turn.
+     */
     private Game fetchActiveGameAndValidateTurn(String roomId, String userUuid) {
         Game game = gameManager.getGame(roomId);
         if (game == null)
@@ -158,7 +153,9 @@ public class GamePlayService {
         return game;
     }
 
-    // Build a flat list of color names from incoming counts.
+    /**
+     * Converts per-color counts into a flat color-name list used by exchange logic.
+     */
     private List<String> buildColorList(int[] counts) {
         List<String> list = new ArrayList<>();
         for (int i = 0; i < counts.length; i++) {
@@ -170,6 +167,9 @@ public class GamePlayService {
         return list;
     }
 
+    /**
+     * Resolves a card from visible slots (non-negative index) or reserved cards (negative index).
+     */
     private Card resolveCard(Game game, Player player, int cardIndex) {
         if (cardIndex >= 0 && cardIndex < game.getVisibleCards().size()) {
             return game.getVisibleCards().get(cardIndex);
@@ -179,5 +179,56 @@ public class GamePlayService {
             return player.getReservedCards().get(reservedIdx);
         }
         return null;
+    }
+
+    /**
+     * Handles a blind reserve from a specific tier deck.
+     */
+    public boolean reserveFromDeck(String roomId, String userUuid, int tier) {
+        Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
+        if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
+            return false;
+
+        Player current = game.getCurrentPlayer();
+
+        // Prevent drawing if they already have 3 reserved cards
+        if (current.getReservedCards().size() >= 3) {
+            game.setMessage("You can only reserve up to 3 cards.");
+            return false;
+        }
+
+        List<Card> deck;
+        if (tier == 1)
+            deck = game.getTier1Deck();
+        else if (tier == 2)
+            deck = game.getTier2Deck();
+        else if (tier == 3)
+            deck = game.getTier3Deck();
+        else
+            return false;
+
+        if (deck.isEmpty()) {
+            game.setMessage("That deck is empty.");
+            return false;
+        }
+
+        // Draw the top card from the deck (last element in the list)
+        Card card = deck.remove(deck.size() - 1);
+        card.setBlind(true);
+
+        if (playerActionService.reserveCard(game, current, card)) {
+            // Check if player exceeded the 10-coin limit because of the newly acquired Gold
+            // token
+            if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
+                game.setPendingDiscard(true);
+            } else {
+                gameEngineService.changeTurns(game);
+            }
+            return true;
+        } else {
+            // If reservation fails for any reason, put the card back on the deck
+            deck.add(card);
+            return false;
+        }
     }
 }

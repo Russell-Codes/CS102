@@ -13,6 +13,7 @@ public class Card {
     // always 0 cost)
     private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
+    private boolean blind = false; // true if card is face-down in a deck (not visible to players)
 
     /**
      * Creates a new development card.
@@ -48,5 +49,13 @@ public class Card {
 
     public void setReserved(boolean reserved) {
         this.reserved = reserved;
+    }
+
+    public boolean isBlind() {
+        return blind;
+    }
+
+    public void setBlind(boolean blind) {
+        this.blind = blind;
     }
 }
