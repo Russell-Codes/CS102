@@ -12,8 +12,8 @@ public class Player {
     // --- CONSTANTS ---
     public static final int MAX_COIN_LIMIT = 10;
     public static final int DISCONNECT_TIMEOUT_MS = 30000;
-    public static final int TOTAL_COIN_TYPES = 6;
-    public static final int REGULAR_GEM_TYPES = 5;
+    public static final int TOTAL_COIN_TYPES = GemColor.values().length; // Includes GOLD
+    public static final int REGULAR_GEM_TYPES = GemColor.values().length - 1; // Exclude GOLD
 
     private boolean ai = false;
     private String name;
@@ -32,7 +32,6 @@ public class Player {
     private boolean isReady = false;
     private boolean isEjected = false;
     private long lastHeartbeat = System.currentTimeMillis();
-
 
     // FIXED: Removed the 'Game' object from the constructor to break the circular
     // dependency
