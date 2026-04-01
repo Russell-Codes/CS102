@@ -5,6 +5,7 @@ import com.g1t7.splendor.model.Player;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -145,5 +146,46 @@ public class LobbyService {
         game.getPlayers().add(host);
 
         return gameManager.createGame(game);
+    }
+
+    /**
+     * Moves a player up or down in the play order.
+     */
+    public boolean movePlayer(String roomId, String hostUuid, String targetUuid, String direction) {
+        Game game = gameManager.getGame(roomId);
+
+        // Only the host can reorder, and only before the game starts
+        if (game == null || !game.getHostUuid().equals(hostUuid) || game.isStarted()) {
+            return false;
+        }
+
+        List<Player> players = game.getPlayers();
+        int index = -1;
+        for (int i = 0; i < players.size(); i++) {
+            if (players.get(i).getUuid() != null && players.get(i).getUuid().equals(targetUuid)) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1)
+            return false;
+
+        // Swap with the player above
+        if ("up".equalsIgnoreCase(direction) && index > 0) {
+            Player temp = players.get(index - 1);
+            players.set(index - 1, players.get(index));
+            players.set(index, temp);
+            return true;
+        }
+        // Swap with the player below
+        else if ("down".equalsIgnoreCase(direction) && index < players.size() - 1) {
+            Player temp = players.get(index + 1);
+            players.set(index + 1, players.get(index));
+            players.set(index, temp);
+            return true;
+        }
+
+        return false;
     }
 }
