@@ -1,4 +1,4 @@
-package com.g1t7.splendor.model;
+package com.g1t7.splendor.util;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,7 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import com.g1t7.splendor.config.GameConfig;
+import com.g1t7.splendor.model.Card;
+import com.g1t7.splendor.model.GemColor;
 
 /**
  * Factory class that loads development cards from an external CSV file.
@@ -71,10 +72,6 @@ public class CardData {
 
         logger.info("Loaded {} cards from {}", deck.size(), csvPath);
         return deck;
-    }
-
-    public static List<Card> buildDeck() {
-        return buildDeck(GameConfig.getCardFile());
     }
 
     private static List<Card> buildFallbackDeck() {

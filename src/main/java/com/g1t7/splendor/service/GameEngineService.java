@@ -2,6 +2,9 @@ package com.g1t7.splendor.service;
 
 import com.g1t7.splendor.config.GameConfig;
 import com.g1t7.splendor.model.*;
+import com.g1t7.splendor.util.CardData;
+import com.g1t7.splendor.util.NobleData;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -88,8 +91,8 @@ public class GameEngineService {
     }
 
     public void changeTurns(Game game) {
+        autoReplenishBoard(game);
         game.setLastActivityTime(System.currentTimeMillis());
-        game.setPendingCard(null);
         game.setMessage("");
 
         if (!game.isFinalRound() && game.getCurrentPlayer().getScore() >= game.getConfig().getWinScore()) {
@@ -116,6 +119,66 @@ public class GameEngineService {
             boolean acted = aiPlayer.takeTurn(game, next);
             if (acted) {
                 changeTurns(game);
+            }
+        }
+    }
+
+    public boolean replacePlayerWithAi(Game game, String hostUuid, String targetUuid) {
+        if (!game.getHostUuid().equals(hostUuid))
+            return false;
+
+        for (Player player : game.getPlayers()) {
+            if (player.getUuid() != null && player.getUuid().equals(targetUuid)) {
+                player.setAi(true);
+                player.setName(player.getName() + " (CPU Replaced)");
+                if (game.getCurrentPlayer() == player) {
+                    aiPlayer.takeTurn(game, player);
+                    changeTurns(game);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean ejectPlayer(Game game, String hostUuid, String targetUuid) {
+        if (!game.getHostUuid().equals(hostUuid))
+            return false;
+
+        for (Player player : game.getPlayers()) {
+            if (player.getUuid() != null && player.getUuid().equals(targetUuid)) {
+                // Return coins to bank
+                for (int i = 0; i < Game.TOTAL_COIN_TYPES; i++) {
+                    game.getBankCoins()[i] += player.getCoins()[i];
+                    player.getCoins()[i] = 0;
+                }
+                // Return reserved cards to top of decks
+                for (Card c : player.getReservedCards()) {
+                    c.setReserved(false);
+                    if (c.getTier() == 1)
+                        game.getTier1Deck().add(0, c);
+                    else if (c.getTier() == 2)
+                        game.getTier2Deck().add(0, c);
+                    else if (c.getTier() == 3)
+                        game.getTier3Deck().add(0, c);
+                }
+                player.getReservedCards().clear();
+                player.setEjected(true);
+                player.setName(player.getName() + " (EJECTED)");
+
+                if (game.getCurrentPlayer() == player) {
+                    changeTurns(game);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void autoReplenishBoard(Game game) {
+        for (int i = 0; i < Game.TOTAL_VISIBLE_CARDS; i++) {
+            if (game.getVisibleCards().get(i) == null) {
+                replenishCard(game, i);
             }
         }
     }

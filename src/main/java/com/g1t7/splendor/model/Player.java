@@ -17,7 +17,6 @@ public class Player implements Serializable {
     public static final int TOTAL_COIN_TYPES = 6;
     public static final int REGULAR_GEM_TYPES = 5;
 
-    private boolean online = true;
     private boolean ai = false;
     private String name;
     private int score;
@@ -27,7 +26,7 @@ public class Player implements Serializable {
     private int[] bonuses = new int[REGULAR_GEM_TYPES];
 
     private List<Card> reservedCards = new ArrayList<>();
-    private Stack<Card> cards = new Stack<>();
+    private List<Card> cards = new ArrayList<>();
     private List<Noble> obtainedNobles = new ArrayList<>();
 
     // --- MULTIPLAYER FIELDS ---
@@ -74,15 +73,6 @@ public class Player implements Serializable {
     }
 
     // --- GETTERS AND SETTERS ---
-
-    public boolean isOnline() {
-        return online;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
-    }
-
     public boolean isAi() {
         return ai;
     }
@@ -128,7 +118,7 @@ public class Player implements Serializable {
         return reservedCards;
     }
 
-    public Stack<Card> getCards() {
+    public List<Card> getCards() {
         return cards;
     }
 

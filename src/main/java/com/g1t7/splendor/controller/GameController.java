@@ -1,6 +1,7 @@
 package com.g1t7.splendor.controller;
 
 import com.g1t7.splendor.service.GameManager;
+import com.g1t7.splendor.service.GameEngineService;
 import com.g1t7.splendor.service.GamePlayService;
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
@@ -20,7 +21,9 @@ public class GameController {
     @Autowired
     private GameManager gameManager;
     @Autowired
-    private GamePlayService gamePlayService; // <-- WE ONLY INJECT THE NEW SERVICE
+    private GamePlayService gamePlayService;
+    @Autowired
+    private GameEngineService gameEngineService;
 
     @GetMapping
     public String showGame(@PathVariable String roomId, Model model, HttpSession session) {
@@ -55,7 +58,9 @@ public class GameController {
     @PostMapping("/host-action/ai")
     public String replaceWithAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String sessionUuid = (String) session.getAttribute("userUuid");
-        if (gameManager.replacePlayerWithAi(roomId, sessionUuid, targetUuid)) {
+        Game game = gameManager.getGame(roomId);
+
+        if (game != null && gameEngineService.replacePlayerWithAi(game, sessionUuid, targetUuid)) {
             refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
@@ -64,7 +69,9 @@ public class GameController {
     @PostMapping("/host-action/eject")
     public String ejectPlayer(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String sessionUuid = (String) session.getAttribute("userUuid");
-        if (gameManager.ejectPlayer(roomId, sessionUuid, targetUuid)) {
+        Game game = gameManager.getGame(roomId);
+
+        if (game != null && gameEngineService.ejectPlayer(game, sessionUuid, targetUuid)) {
             refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
@@ -129,9 +136,6 @@ public class GameController {
         return "redirect:/game/" + roomId;
     }
 
-    /**
-     * Helper method to broadcast a websocket refresh command.
-     */
     private void refreshRoom(String roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
     }

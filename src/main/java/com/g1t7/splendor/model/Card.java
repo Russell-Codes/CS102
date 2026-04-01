@@ -16,7 +16,6 @@ public class Card implements Serializable {
     // always 0 cost)
     private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
-    private String imagePath;
 
     public Card() {
     }
@@ -77,13 +76,5 @@ public class Card implements Serializable {
 
     public void setReserved(boolean reserved) {
         this.reserved = reserved;
-    }
-
-    public String getImagePath() {
-        return imagePath;
-    }
-
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
     }
 }

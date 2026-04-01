@@ -2,6 +2,7 @@ package com.g1t7.splendor.service;
 
 import com.g1t7.splendor.model.Card;
 import com.g1t7.splendor.model.Game;
+import com.g1t7.splendor.model.GemColor;
 import com.g1t7.splendor.model.Noble;
 import com.g1t7.splendor.model.Player;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Service responsible for orchestrating gameplay actions.
- * Acts as the bridge between player requests and core game logic.
- */
 @Service
 public class GamePlayService {
 
@@ -24,15 +21,6 @@ public class GamePlayService {
     @Autowired
     private GameEngineService gameEngineService;
 
-    /**
-     * Processes a player's request to take gems from the bank.
-     *
-     * @param roomId   The ID of the game room.
-     * @param userUuid The UUID of the requesting player.
-     * @param counts   An array of requested gem counts [White, Blue, Green, Red,
-     *                 Black].
-     * @return true if the action was successful and the board needs refreshing.
-     */
     public boolean takeCoins(String roomId, String userUuid, int[] counts) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -54,9 +42,6 @@ public class GamePlayService {
         return false;
     }
 
-    /**
-     * Processes a player's request to buy a card from the board or their reserves.
-     */
     public boolean buyCard(String roomId, String userUuid, int cardIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -67,7 +52,8 @@ public class GamePlayService {
 
         if (card != null && playerActionService.buyCard(game, current, card)) {
             if (cardIndex >= 0) {
-                gameEngineService.replenishCard(game, cardIndex);
+                // REFACTORED: Let the Engine Sweeper handle it!
+                game.getVisibleCards().set(cardIndex, null);
             } else {
                 current.getReservedCards().remove(card);
             }
@@ -80,9 +66,6 @@ public class GamePlayService {
         return false;
     }
 
-    /**
-     * Processes a player's choice of Noble when multiple are earned at once.
-     */
     public boolean claimNoble(String roomId, String userUuid, int nobleIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || !game.isPendingNobleChoice())
@@ -105,9 +88,6 @@ public class GamePlayService {
         return false;
     }
 
-    /**
-     * Processes a player's request to reserve a visible card.
-     */
     public boolean reserveCard(String roomId, String userUuid, int cardIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -118,7 +98,9 @@ public class GamePlayService {
             Card card = game.getVisibleCards().get(cardIndex);
 
             if (card != null && playerActionService.reserveCard(game, current, card)) {
-                gameEngineService.replenishCard(game, cardIndex);
+                // REFACTORED: Let the Engine Sweeper handle it!
+                game.getVisibleCards().set(cardIndex, null);
+
                 if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
                     game.setPendingDiscard(true);
                 } else {
@@ -130,10 +112,6 @@ public class GamePlayService {
         return false;
     }
 
-    /**
-     * Processes a player's required coin discard when they exceed the 10-coin
-     * limit.
-     */
     public boolean discardCoins(String roomId, String userUuid, String color) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || !game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -161,12 +139,13 @@ public class GamePlayService {
         return game;
     }
 
+    // REFACTORED: Using the enum directly
     private List<String> buildColorList(int[] counts) {
         List<String> list = new ArrayList<>();
-        String[] colors = { "WHITE", "BLUE", "GREEN", "RED", "BLACK" };
         for (int i = 0; i < counts.length; i++) {
+            String colorName = GemColor.fromIndex(i).name();
             for (int j = 0; j < Math.min(Math.max(counts[i], 0), 2); j++) {
-                list.add(colors[i]);
+                list.add(colorName);
             }
         }
         return list;

@@ -6,17 +6,11 @@ import com.g1t7.splendor.model.GemColor;
 import com.g1t7.splendor.model.Player;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Simple computer opponent for Splendor.
- * Implements a rigid, procedural, heuristic-driven decision matrix avoiding
- * complex state-space trees.
- */
 @Service
 public class AIPlayer {
 
@@ -25,14 +19,11 @@ public class AIPlayer {
     private static final int TOTAL_COIN_TYPES = 6;
 
     private final PlayerActionService actionService;
-    private final GameEngineService gameEngineService;
 
-    // @Lazy prevents a circular dependency because GameEngineService also injects
-    // AIPlayer
+    // REFACTORED: Removed GameEngineService injection to break circular dependency!
     @Autowired
-    public AIPlayer(PlayerActionService actionService, @Lazy GameEngineService gameEngineService) {
+    public AIPlayer(PlayerActionService actionService) {
         this.actionService = actionService;
-        this.gameEngineService = gameEngineService;
     }
 
     public boolean takeTurn(Game game, Player player) {
@@ -79,8 +70,8 @@ public class AIPlayer {
             if (fromReserve) {
                 player.getReservedCards().remove(bestCard);
             } else {
-                // FIXED: Now uses the injected gameEngineService
-                gameEngineService.replenishCard(game, bestSlot);
+                // REFACTORED: Nullify slot for the Sweeper
+                game.getVisibleCards().set(bestSlot, null);
             }
         }
         return isSuccessful;
@@ -119,8 +110,9 @@ public class AIPlayer {
 
         boolean isSuccessful = actionService.reserveCard(game, player, bestCard);
         if (isSuccessful) {
-            // FIXED: Now uses the injected gameEngineService
-            gameEngineService.replenishCard(game, bestSlot);
+            // REFACTORED: Nullify slot for the Sweeper
+            game.getVisibleCards().set(bestSlot, null);
+
             while (player.getTotalCoins() > MAX_COIN_LIMIT) {
                 autoDiscard(game, player);
             }

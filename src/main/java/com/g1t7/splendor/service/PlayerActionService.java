@@ -67,11 +67,10 @@ public class PlayerActionService {
         bankCoins[goldIndex] += goldSpent;
 
         // Grant the card to the player
-        player.getCards().push(card);
+        player.getCards().add(card);
         playerCards[card.getGemColor().ordinal()]++;
         player.setScore(player.getScore() + card.getValue());
         card.setReserved(false);
-
         checkNobles(game, player, game.getActiveNobles());
         return true;
     }

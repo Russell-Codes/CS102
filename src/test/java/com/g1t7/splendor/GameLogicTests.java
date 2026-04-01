@@ -3,6 +3,8 @@ package com.g1t7.splendor;
 import com.g1t7.splendor.config.GameConfig;
 import com.g1t7.splendor.model.*;
 import com.g1t7.splendor.service.*;
+import com.g1t7.splendor.util.CardData;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 

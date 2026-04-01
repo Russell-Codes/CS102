@@ -23,7 +23,6 @@ public class Game implements Serializable {
     private List<Noble> activeNobles = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
 
-    private Card pendingCard = null;
     private int currentTurnIndex = 0;
     private String message = "";
     private boolean finalRound = false;
@@ -127,13 +126,6 @@ public class Game implements Serializable {
         this.players = players;
     }
 
-    public Card getPendingCard() {
-        return pendingCard;
-    }
-
-    public void setPendingCard(Card pendingCard) {
-        this.pendingCard = pendingCard;
-    }
 
     public int getCurrentTurnIndex() {
         return currentTurnIndex;

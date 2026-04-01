@@ -1,4 +1,4 @@
-package com.g1t7.splendor.model;
+package com.g1t7.splendor.util;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import com.g1t7.splendor.config.GameConfig;
+import com.g1t7.splendor.model.Noble;
 
 /**
  * Factory class that loads Noble tiles from an external CSV file.
@@ -69,11 +69,7 @@ public class NobleData {
         logger.info("Loaded {} nobles from {}", nobles.size(), csvPath);
         return nobles;
     }
-
-    public static List<Noble> buildNobles() {
-        return buildNobles(GameConfig.getNobleFile());
-    }
-
+    
     private static List<Noble> buildFallbackNobles() {
         List<Noble> nobles = new ArrayList<>();
         nobles.add(new Noble(4, 4, 0, 0, 0));
