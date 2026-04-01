@@ -12,9 +12,9 @@ import java.util.List;
 @Service
 public class AIPlayer {
 
-    private static final int MAX_COIN_LIMIT = 10;
-    private static final int REGULAR_GEM_TYPES = Player.MAX_COIN_LIMIT;
-    private static final int TOTAL_COIN_TYPES = Player.REGULAR_GEM_TYPES;
+    private static final int MAX_COIN_LIMIT = Player.MAX_COIN_LIMIT;
+    private static final int REGULAR_GEM_TYPES = Player.REGULAR_GEM_TYPES;
+    private static final int TOTAL_COIN_TYPES = Player.TOTAL_COIN_TYPES;
 
     private final PlayerActionService actionService;
 

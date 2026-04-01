@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 public class GameEngineService {
-    
+
     private AIPlayer aiPlayer;
 
     public GameEngineService(AIPlayer aiPlayer) {
@@ -25,6 +25,14 @@ public class GameEngineService {
         initDecks(game);
         initBoard(game);
         initNobles(game, numPlayers);
+
+        Player firstPlayer = game.getPlayers().get(0);
+        if (firstPlayer.isAi()) {
+            boolean acted = aiPlayer.takeTurn(game, firstPlayer);
+            if (acted) {
+                changeTurns(game);
+            }
+        }
     }
 
     private void initBank(Game game, int numPlayers) {
