@@ -16,7 +16,7 @@ public class GameManager {
     private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     private final Map<String, Game> games = new ConcurrentHashMap<>();
     private static final long ROOM_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-    public static final int MAX_LOBBIES = 1;
+    public static final int MAX_LOBBIES = 67;
 
     public String createGame(Game game) {
         // Enforce the lobby limit
