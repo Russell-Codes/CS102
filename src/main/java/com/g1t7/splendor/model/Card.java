@@ -15,9 +15,6 @@ public class Card {
     private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
 
-    public Card() {
-    }
-
     public Card(int tier, GemColor gemColor, int value, int[] cost) {
         this.tier = tier;
         this.gemColor = gemColor;

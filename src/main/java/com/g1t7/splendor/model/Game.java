@@ -11,7 +11,7 @@ public class Game {
     // --- CONSTANTS ---
     public static final int VISIBLE_CARDS_PER_TIER = 4;
     public static final int TOTAL_VISIBLE_CARDS = 12;
-    public static final int TOTAL_COIN_TYPES = 6;
+    public static final int TOTAL_COIN_TYPES = Player.TOTAL_COIN_TYPES;
 
     private GameConfig config;
     private int[] bankCoins = new int[TOTAL_COIN_TYPES];
@@ -120,11 +120,6 @@ public class Game {
     public List<Player> getPlayers() {
         return players;
     }
-
-    public void setPlayers(List<Player> players) {
-        this.players = players;
-    }
-
 
     public int getCurrentTurnIndex() {
         return currentTurnIndex;

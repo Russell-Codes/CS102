@@ -13,8 +13,8 @@ import java.util.List;
 public class AIPlayer {
 
     private static final int MAX_COIN_LIMIT = 10;
-    private static final int REGULAR_GEM_TYPES = 5;
-    private static final int TOTAL_COIN_TYPES = 6;
+    private static final int REGULAR_GEM_TYPES = Player.MAX_COIN_LIMIT;
+    private static final int TOTAL_COIN_TYPES = Player.REGULAR_GEM_TYPES;
 
     private final PlayerActionService actionService;
 
