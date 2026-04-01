@@ -33,7 +33,7 @@ class GameLogicTests {
         // Initialize our clean architecture services manually for testing
         playerActionService = new PlayerActionService();
         gameEngineService = new GameEngineService();
-        aiPlayerService = new AIPlayer(playerActionService, gameEngineService);
+        aiPlayerService = new AIPlayer(playerActionService);
 
         // Inject the AIPlayer service into GameEngineService (resolving the Spring
         // @Autowired)
@@ -349,9 +349,9 @@ class GameLogicTests {
         p2.setScore(15);
         // P1 bought 5 cards, P2 bought 3 → P2 wins tiebreaker (fewer cards)
         for (int i = 0; i < 5; i++)
-            p1.getCards().push(new Card(1, GemColor.WHITE, 3, new int[6]));
+            p1.getCards().add(new Card(1, GemColor.WHITE, 3, new int[6]));
         for (int i = 0; i < 3; i++)
-            p2.getCards().push(new Card(1, GemColor.WHITE, 5, new int[6]));
+            p2.getCards().add(new Card(1, GemColor.WHITE, 5, new int[6]));
 
         assertEquals(p2, game.getWinner(), "With same score, fewer cards wins");
     }
