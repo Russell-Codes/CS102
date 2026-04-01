@@ -1,121 +1,91 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Splendor — Online</title>
-    <link rel="stylesheet" th:href="@{/css/main.css}" />
-  </head>
-  <body
-    class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center pt-12 px-4 font-sans"
-  >
-    <div class="w-full max-w-3xl mb-6">
-      <div
-        th:if="${param.error != null and param.error[0] == 'notfound'}"
-        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
-      >
-        Error: Room not found. Please check the Room ID and try again.
-      </div>
-      <div
-        th:if="${param.error != null and param.error[0] == 'full'}"
-        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
-      >
-        Error: That room is already at maximum capacity!
-      </div>
-      <div
-        th:if="${param.error != null and param.error[0] == 'started'}"
-        class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center"
-      >
-        Error: That game has already started!
-      </div>
-    </div>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Splendor — Online</title>
+        <link rel="stylesheet" th:href="@{/css/main.css}" />
+    </head>
+    <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center pt-12 px-4 font-sans">
+        <div class="w-full max-w-3xl mb-6">
+            <div th:if="${param.error != null and param.error[0] == 'notfound'}" class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center">
+                Error: Room not found. Please check the Room ID and try again.
+            </div>
+            <div th:if="${param.error != null and param.error[0] == 'full'}" class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center">
+                Error: That room is already at maximum capacity!
+            </div>
+            <div th:if="${param.error != null and param.error[0] == 'started'}" class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center">
+                Error: That game has already started!
+            </div>
+            <div th:if="${param.error != null and param.error[0] == 'serverfull'}" class="bg-red-600 text-white font-bold p-4 rounded-lg shadow-lg text-center">
+                Error: The server is currently at maximum capacity. Please try again later!
+            </div>
+        </div>
 
-    <div
-      class="w-full max-w-4xl bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 flex flex-col md:flex-row gap-8"
-    >
-      <div class="flex-1">
-        <h1
-          class="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-yellow-600 mb-2"
-        >
-          Splendor
-        </h1>
-        <h2 class="text-xl text-gray-400 mb-6 font-semibold">
-          Create New Game
-        </h2>
+        <div class="w-full max-w-4xl bg-gray-800 border border-gray-700 rounded-2xl shadow-2xl p-8 flex flex-col md:flex-row gap-8">
+            <div class="flex-1">
+                <h1 class="text-4xl font-extrabold text-transparent bg-clip-text bg-linear-to-r from-yellow-400 to-yellow-600 mb-2">Splendor</h1>
+                <h2 class="text-xl text-gray-400 mb-6 font-semibold">Create New Game</h2>
 
-        <form th:action="@{/start}" method="post" class="space-y-4">
-          <div>
-            <label
-              for="hostName"
-              class="block text-sm font-medium text-gray-300 mb-1"
-              >Your Name (Host)</label
-            >
-            <input
-              type="text"
-              id="hostName"
-              name="hostName"
-              placeholder="Enter your name"
-              required
-              maxlength="20"
-              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
-            />
-          </div>
-          <div>
-            <label
-              for="numPlayers"
-              class="block text-sm font-medium text-gray-300 mb-1"
-              >Room Capacity</label
-            >
-            <select
-              id="numPlayers"
-              name="numPlayers"
-              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
-            >
-              <option value="2">2 Players</option>
-              <option value="3">3 Players</option>
-              <option value="4">4 Players</option>
-            </select>
-          </div>
-          <button
-            type="submit"
-            class="w-full hover:cursor-pointer bg-linear-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-gray-900 font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5"
-          >
-            Create Lobby
-          </button>
-        </form>
-      </div>
+                <form th:action="@{/start}" method="post" class="space-y-4">
+                    <div>
+                        <label for="hostName" class="block text-sm font-medium text-gray-300 mb-1">Your Name (Host)</label>
+                        <input
+                            type="text"
+                            id="hostName"
+                            name="hostName"
+                            placeholder="Enter your name"
+                            required
+                            maxlength="20"
+                            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+                        />
+                    </div>
+                    <div>
+                        <label for="numPlayers" class="block text-sm font-medium text-gray-300 mb-1">Room Capacity</label>
+                        <select
+                            id="numPlayers"
+                            name="numPlayers"
+                            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-500 transition-all"
+                        >
+                            <option value="2">2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                        </select>
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full hover:cursor-pointer bg-linear-to-r from-yellow-600 to-yellow-500 hover:from-yellow-500 hover:to-yellow-400 text-gray-900 font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5"
+                    >
+                        Create Lobby
+                    </button>
+                </form>
+            </div>
 
-      <div class="hidden md:block w-px bg-gray-700"></div>
+            <div class="hidden md:block w-px bg-gray-700"></div>
 
-      <div class="flex-1 flex flex-col justify-center">
-        <h2 class="text-xl text-gray-400 mb-6 font-semibold md:mt-10">
-          Join Existing Game
-        </h2>
+            <div class="flex-1 flex flex-col justify-center">
+                <h2 class="text-xl text-gray-400 mb-6 font-semibold md:mt-10">Join Existing Game</h2>
 
-        <form action="/join" method="get" class="space-y-4">
-          <div>
-            <label
-              for="roomId"
-              class="block text-sm font-medium text-gray-300 mb-1"
-              >Room ID</label
-            >
-            <input
-              type="text"
-              id="roomId"
-              name="roomId"
-              placeholder="e.g. A1B2C3"
-              required
-              class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-            />
-          </div>
-          <button
-            type="submit"
-            class="w-full hover:cursor-pointer bg-linear-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 mt-2"
-          >
-            Join Lobby
-          </button>
-        </form>
-      </div>
-    </div>
-  </body>
+                <form action="/join" method="get" class="space-y-4">
+                    <div>
+                        <label for="roomId" class="block text-sm font-medium text-gray-300 mb-1">Room ID</label>
+                        <input
+                            type="text"
+                            id="roomId"
+                            name="roomId"
+                            placeholder="e.g. A1B2C3"
+                            required
+                            class="w-full bg-gray-900 border border-gray-600 rounded-lg px-4 py-2 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        class="w-full hover:cursor-pointer bg-linear-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition-transform transform hover:-translate-y-0.5 mt-2"
+                    >
+                        Join Lobby
+                    </button>
+                </form>
+            </div>
+        </div>
+    </body>
 </html>

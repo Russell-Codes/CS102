@@ -16,9 +16,15 @@ public class GameManager {
     private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     private final Map<String, Game> games = new ConcurrentHashMap<>();
     private static final long ROOM_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-    public static final int MAX_LOBBIES = 50;
+    public static final int MAX_LOBBIES = 1;
 
     public String createGame(Game game) {
+        // Enforce the lobby limit
+        if (games.size() >= MAX_LOBBIES) {
+            logger.warn("Maximum lobby capacity reached. Cannot create new room.");
+            return null;
+        }
+
         String roomId = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
         game.setLastActivityTime(System.currentTimeMillis());
         games.put(roomId, game);

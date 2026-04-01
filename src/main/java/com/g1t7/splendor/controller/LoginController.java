@@ -45,6 +45,11 @@ public class LoginController {
             HttpSession session) {
         String hostUuid = ensureUuid(session);
         String roomId = lobbyService.createNewRoom(numPlayers, hostName, hostUuid);
+
+        if (roomId == null) {
+            return "redirect:/?error=serverfull";
+        }
+
         return "redirect:/lobby/" + roomId;
     }
 
