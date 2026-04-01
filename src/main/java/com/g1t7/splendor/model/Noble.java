@@ -8,12 +8,13 @@ package com.g1t7.splendor.model;
 public class Noble {
 
     private int victoryPoints = 3;
-
+    private int imageId; // for frontend display, corresponds to index in GameConfig.nobles list
     // requirement[i] = cards of GemColor.fromIndex(i) needed (WHITE..BLACK, indices
     // 0-4)
     private int[] requirement = new int[Player.REGULAR_GEM_TYPES];
 
-    public Noble(int white, int blue, int green, int red, int black) {
+    public Noble(int imageId, int white, int blue, int green, int red, int black) {
+        this.imageId = imageId;
         requirement[GemColor.WHITE.ordinal()] = white;
         requirement[GemColor.BLUE.ordinal()] = blue;
         requirement[GemColor.GREEN.ordinal()] = green;
@@ -34,6 +35,10 @@ public class Noble {
             }
         }
         return true;
+    }
+
+    public int getImageId() {
+        return imageId;
     }
 
     public int getVictoryPoints() {
