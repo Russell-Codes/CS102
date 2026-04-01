@@ -1,4 +1,4 @@
-package com.g1t7.splendor.model;
+package com.g1t7.splendor.util;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -8,11 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import com.g1t7.splendor.config.GameConfig;
+import com.g1t7.splendor.model.Card;
+import com.g1t7.splendor.model.GemColor;
 
 /**
- * Factory class that loads development cards from an external CSV file.
- * Falls back to a minimal hardcoded deck if the CSV cannot be read.
+ * Loads development cards from CSV.
+ * Uses a fallback deck if the file cannot be read.
  */
 public class CardData {
 
@@ -24,9 +25,9 @@ public class CardData {
 
     /**
      * Builds the full deck from the configured CSV path.
-     * * @param csvPath The classpath location of the CSV file.
-     * 
-     * @return A list of initialized Card objects.
+     *
+     * @param csvPath classpath location of the CSV file
+     * @return list of cards
      */
     public static List<Card> buildDeck(String csvPath) {
         List<Card> deck = new ArrayList<>();
@@ -73,10 +74,9 @@ public class CardData {
         return deck;
     }
 
-    public static List<Card> buildDeck() {
-        return buildDeck(GameConfig.getCardFile());
-    }
-
+    /**
+     * Builds a fallback deck used when CSV loading fails.
+     */
     private static List<Card> buildFallbackDeck() {
         List<Card> fallbackDeck = new ArrayList<>();
         int[][] templates = {

@@ -1,593 +1,437 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Splendor</title>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Splendor</title>
 
-    <link rel="stylesheet" th:href="@{/css/main.css}" />
-  </head>
-  <body class="bg-slate-900 text-slate-200 min-h-screen font-sans p-4">
-    <div
-      th:if="${game.message != null and !game.message.isEmpty()}"
-      class="mb-4 bg-red-900/80 border border-red-500 text-white px-4 py-3 rounded-lg text-center font-bold shadow-lg"
-      th:text="${game.message}"
-    ></div>
-
-    <div
-      th:if="${game.finalRound}"
-      class="mb-6 bg-linear-to-r from-yellow-700 to-yellow-600 border border-yellow-400 text-yellow-50 px-4 py-4 rounded-xl text-center shadow-[0_0_20px_rgba(202,138,4,0.6)] animate-pulse"
-    >
-      <div
-        class="font-black text-2xl uppercase tracking-widest drop-shadow-md mb-1"
-      >
-        ⚠️ Final Round! ⚠️
-      </div>
-      <div class="font-semibold text-yellow-100">
-        A player has reached <span th:text="${game.winScore}">15</span> prestige
-        points! Finish the round so all players have an equal number of turns.
-      </div>
-    </div>
-
-    <div class="flex flex-col xl:flex-row gap-6 max-w-400 mx-auto">
-      <div class="w-full xl:w-3/4 flex flex-col gap-6">
+        <link rel="stylesheet" th:href="@{/css/main.css}" />
+    </head>
+    <body class="bg-slate-900 text-slate-200 min-h-screen font-sans p-4">
         <div
-          class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-md"
+            th:if="${game.message != null and !game.message.isEmpty()}"
+            class="mb-4 bg-red-900/80 border border-red-500 text-white px-4 py-3 rounded-lg text-center font-bold shadow-lg"
+            th:text="${game.message}"
+        ></div>
+
+        <div
+            th:if="${game.finalRound}"
+            class="mb-6 bg-linear-to-r from-yellow-700 to-yellow-600 border border-yellow-400 text-yellow-50 px-4 py-4 rounded-xl text-center shadow-[0_0_20px_rgba(202,138,4,0.6)] animate-pulse"
         >
-          <div class="text-lg">
-            <span class="text-slate-400">Current Turn: </span>
-            <strong
-              class="text-white text-xl"
-              th:text="${game.currentPlayer.name}"
-              >Player</strong
-            >
-            <span
-              th:if="${game.currentPlayer.uuid == myUuid}"
-              class="ml-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 rounded-full text-sm font-bold animate-pulse"
-              >Your Turn!</span
-            >
-          </div>
-          <div class="text-slate-400 mt-2 sm:mt-0">
-            Target:
-            <strong class="text-yellow-500 text-xl" th:text="${game.winScore}"
-              >15</strong
-            >
-            prestige
-          </div>
+            <div class="font-black text-2xl uppercase tracking-widest drop-shadow-md mb-1">⚠️ Final Round! ⚠️</div>
+            <div class="font-semibold text-yellow-100">
+                A player has reached <span th:text="${game.winScore}">15</span> prestige points! Finish the round so all players have an equal number of turns.
+            </div>
         </div>
 
-        <div
-          class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md overflow-x-auto"
-        >
-          <h3
-            class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3"
-          >
-            Nobles
-          </h3>
-          <div class="flex gap-4">
-            <div
-              th:each="noble, nobleStat : ${game.activeNobles}"
-              class="min-w-20 h-24 border-2 border-slate-500/80 rounded-lg shadow-lg flex flex-col justify-between p-1.5 hover:border-yellow-400 transition-colors bg-cover bg-center"
-              th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + (${nobleStat.index % 10} + 1) + '.png)'"
-            >
-              <div
-                class="text-lg font-black text-white drop-shadow-md leading-none"
-                th:text="${noble.victoryPoints}"
-              >
-                3
-              </div>
-              <div class="flex flex-wrap gap-0.5 justify-end">
-                <span
-                  th:each="i : ${#numbers.sequence(0, 4)}"
-                  th:if="${noble.requirement[i] > 0}"
-                  th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
-                  th:text="${noble.requirement[i]}"
-                ></span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md flex flex-col gap-4"
-        >
-          <div
-            th:each="tier : ${#numbers.sequence(3, 1, -1)}"
-            class="flex flex-col sm:flex-row gap-4 items-center"
-          >
-            <div
-              class="w-full h-max py-2 sm:w-24 sm:h-36 bg-slate-700 border-2 border-slate-600 rounded-xl shadow-inner flex flex-col items-center justify-center shrink-0"
-            >
-              <span
-                class="text-xs text-slate-400 uppercase font-bold tracking-wider"
-                th:text="'Tier ' + ${tier}"
-              ></span>
-              <span
-                class="text-2xl font-black text-slate-500 mt-1"
-                th:text="${game.getDeckSize(tier)}"
-              ></span>
-            </div>
-
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
-              <div
-                th:each="card, stat : ${game.getVisibleCardsForTier(tier)}"
-                th:with="slotIndex=${(tier - 1) * 4 + stat.index}"
-              >
-                <div
-                  th:if="${card == null}"
-                  class="w-full h-36 bg-slate-800 border-2 border-dashed border-slate-600 rounded-xl flex items-center justify-center opacity-50"
-                ></div>
-
-                <div
-                  th:if="${card != null}"
-                  tabindex="0"
-                  th:class="'relative w-full h-36 rounded-xl border border-slate-400/50 shadow-lg flex flex-col justify-between p-2.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group card-bg-' + ${card.gemColor.name().toLowerCase()}"
-                >
-                  <div class="flex justify-between items-start">
-                    <div
-                      th:if="${card.value > 0}"
-                      class="bg-black/70 px-2.5 py-0.5 rounded-br-xl rounded-tl-lg shadow-md"
-                    >
-                      <span
-                        class="text-2xl font-black text-white drop-shadow-md"
-                        th:text="${card.value}"
-                      ></span>
+        <div class="flex flex-col xl:flex-row gap-6 max-w-400 mx-auto">
+            <div class="w-full xl:w-3/4 flex flex-col gap-6">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center shadow-md">
+                    <div class="text-lg">
+                        <span class="text-slate-400">Current Turn: </span>
+                        <strong class="text-white text-xl" th:text="${game.currentPlayer.name}">Player</strong>
+                        <span
+                            th:if="${game.currentPlayer.uuid == myUuid}"
+                            class="ml-2 px-3 py-1 bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 rounded-full text-sm font-bold animate-pulse"
+                            >Your Turn!</span
+                        >
                     </div>
-                    <div th:if="${card.value == 0}"></div>
+                    <div class="text-slate-400 mt-2 sm:mt-0">
+                        Target:
+                        <strong class="text-yellow-500 text-xl" th:text="${game.winScore}">15</strong>
+                        prestige
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md overflow-x-auto">
+                    <h3 class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-3">Nobles</h3>
+                    <div class="flex gap-4">
+                        <div
+                            th:each="noble, nobleStat : ${game.activeNobles}"
+                            class="min-w-20 h-24 border-2 border-slate-500/80 rounded-lg shadow-lg flex flex-col justify-between p-1.5 hover:border-yellow-400 transition-colors bg-cover bg-center"
+                            th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + ${noble.imageId} + '.png)'"
+                        >
+                            <div class="text-lg font-black text-white drop-shadow-md leading-none" th:text="${noble.victoryPoints}">3</div>
+                            <div class="flex flex-wrap gap-0.5 justify-end">
+                                <span
+                                    th:each="i : ${#numbers.sequence(0, 4)}"
+                                    th:if="${noble.requirement[i] > 0}"
+                                    th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
+                                    th:text="${noble.requirement[i]}"
+                                ></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md flex flex-col gap-4">
+                    <div th:each="tier : ${#numbers.sequence(3, 1, -1)}" class="flex flex-col sm:flex-row gap-4 items-center">
+                        <div
+                            tabindex="0"
+                            class="relative group w-full h-max py-2 sm:w-24 sm:h-36 bg-slate-700 border-2 border-slate-600 rounded-xl shadow-inner flex flex-col items-center justify-center shrink-0 focus:outline-none"
+                        >
+                            <span class="text-xs text-slate-400 uppercase font-bold tracking-wider" th:text="'Tier ' + ${tier}"></span>
+                            <span class="text-2xl font-black text-slate-500 mt-1" th:text="${game.getDeckSize(tier)}"></span>
+
+                            <div
+                                th:if="${!game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid and game.getDeckSize(tier) > 0}"
+                                class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex flex-col items-center justify-center transition-opacity"
+                            >
+                                <form th:action="@{|/game/${roomId}/reserve-deck|}" method="post">
+                                    <input type="hidden" name="tier" th:value="${tier}" />
+                                    <button
+                                        type="submit"
+                                        class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1.5 px-3 rounded shadow text-xs text-center leading-tight hover:cursor-pointer"
+                                    >
+                                        Blind<br />Reserve
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+                            <div th:each="card, stat : ${game.getVisibleCardsForTier(tier)}" th:with="slotIndex=${(tier - 1) * 4 + stat.index}">
+                                <div
+                                    th:if="${card == null}"
+                                    class="w-full h-36 bg-slate-800 border-2 border-dashed border-slate-600 rounded-xl flex items-center justify-center opacity-50"
+                                ></div>
+
+                                <div
+                                    th:if="${card != null}"
+                                    tabindex="0"
+                                    th:class="'relative w-full h-36 rounded-xl border border-slate-400/50 shadow-lg flex flex-col justify-between p-2.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group card-bg-' + ${card.gemColor.name().toLowerCase()}"
+                                >
+                                    <div class="flex justify-between items-start">
+                                        <div th:if="${card.value > 0}" class="bg-black/70 px-2.5 py-0.5 rounded-br-xl rounded-tl-lg shadow-md">
+                                            <span class="text-2xl font-black text-white drop-shadow-md" th:text="${card.value}"></span>
+                                        </div>
+                                        <div th:if="${card.value == 0}"></div>
+                                        <div
+                                            th:class="'w-8 h-8 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.8)] border-2 border-white/90 gem-' + ${card.gemColor.name().toLowerCase()}"
+                                        ></div>
+                                    </div>
+
+                                    <div class="flex flex-col gap-0.5 items-start mt-auto">
+                                        <span
+                                            th:each="i : ${#numbers.sequence(0, 4)}"
+                                            th:if="${card.cost[i] > 0}"
+                                            th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
+                                            th:text="${card.cost[i]}"
+                                        ></span>
+                                    </div>
+
+                                    <div
+                                        th:if="${!game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
+                                        class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity"
+                                    >
+                                        <form th:action="@{|/game/${roomId}/buy-card|}" method="post">
+                                            <input type="hidden" name="cardIndex" th:value="${slotIndex}" /><button
+                                                type="submit"
+                                                class="bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 px-4 rounded shadow hover:cursor-pointer"
+                                            >
+                                                Buy
+                                            </button>
+                                        </form>
+                                        <form th:action="@{|/game/${roomId}/reserve-card|}" method="post">
+                                            <input type="hidden" name="cardIndex" th:value="${slotIndex}" /><button
+                                                type="submit"
+                                                class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1.5 px-4 rounded shadow hover:cursor-pointer"
+                                            >
+                                                Reserve
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md">
+                    <div th:if="${game.pendingNobleChoice}">
+                        <div th:if="${game.currentPlayer.uuid == myUuid}">
+                            <h3 class="text-yellow-400 font-bold mb-2">Noble Visit!</h3>
+                            <p class="text-sm text-slate-300 mb-4">You have attracted multiple nobles. Choose one to keep.</p>
+                            <div class="flex flex-wrap gap-4">
+                                <div
+                                    th:each="noble, nStat : ${game.pendingNobles}"
+                                    tabindex="0"
+                                    class="relative w-20 h-24 border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col justify-between p-1.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group bg-cover bg-center"
+                                    th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + ${noble.imageId} + '.png)'"
+                                >
+                                    <div class="text-lg font-black text-white drop-shadow-md leading-none" th:text="${noble.victoryPoints}">3</div>
+                                    <div class="flex flex-wrap gap-0.5 justify-end">
+                                        <span
+                                            th:each="i : ${#numbers.sequence(0, 4)}"
+                                            th:if="${noble.requirement[i] > 0}"
+                                            th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
+                                            th:text="${noble.requirement[i]}"
+                                        ></span>
+                                    </div>
+                                    <form
+                                        th:action="@{|/game/${roomId}/claim-noble|}"
+                                        method="post"
+                                        class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity"
+                                    >
+                                        <input type="hidden" name="nobleIndex" th:value="${nStat.index}" />
+                                        <button
+                                            type="submit"
+                                            class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-3 rounded shadow text-xs hover:cursor-pointer"
+                                        >
+                                            Claim
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${game.currentPlayer.uuid != myUuid}" class="text-yellow-500 font-bold py-4 text-center animate-pulse">
+                            Waiting for <span th:text="${game.currentPlayer.name}"></span> to choose a Noble...
+                        </div>
+                    </div>
+
+                    <div th:if="${game.pendingDiscard and !game.pendingNobleChoice}">
+                        <div th:if="${game.currentPlayer.uuid == myUuid}">
+                            <h3 class="text-red-400 font-bold mb-2">Discard Coins Required!</h3>
+                            <p class="text-sm text-slate-300 mb-4">
+                                You have
+                                <strong th:text="${game.currentPlayer.totalCoins}"></strong>
+                                coins. Discard
+                                <strong th:text="${game.currentPlayer.totalCoins - 10}"></strong>.
+                            </p>
+                            <div class="flex flex-wrap gap-4">
+                                <div th:each="i : ${#numbers.sequence(0, 5)}" th:if="${game.currentPlayer.getCoins()[i] > 0}" class="flex flex-col items-center gap-2">
+                                    <div
+                                        th:class="'relative w-16 h-16 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center font-bold gem-' + ${game.gemColorName(i)}"
+                                    >
+                                        <span
+                                            class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-white/20"
+                                            th:text="${game.currentPlayer.getCoins()[i]}"
+                                        ></span>
+                                    </div>
+                                    <form th:action="@{|/game/${roomId}/discard-coins|}" method="post">
+                                        <input type="hidden" name="color" th:value="${game.gemColorName(i).toUpperCase()}" />
+                                        <button type="submit" class="text-xs bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-white hover:cursor-pointer">
+                                            Discard
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${game.currentPlayer.uuid != myUuid}" class="text-yellow-500 font-bold py-4 text-center animate-pulse">
+                            Waiting for <span th:text="${game.currentPlayer.name}"></span> to discard coins...
+                        </div>
+                    </div>
+
+                    <div th:if="${!game.pendingDiscard and !game.pendingNobleChoice}">
+                        <h3 class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4">Coin Bank</h3>
+                        <form th:action="@{|/game/${roomId}/take-coins|}" method="post" class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <div class="flex flex-wrap justify-center gap-4">
+                                <div th:each="i : ${#numbers.sequence(0, 4)}" class="flex flex-col items-center gap-2">
+                                    <div
+                                        th:class="'relative w-16 h-16 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center font-bold gem-' + ${game.gemColorName(i)}"
+                                    >
+                                        <span
+                                            class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-white/20"
+                                            th:text="${game.bankCoins[i]}"
+                                        ></span>
+                                    </div>
+                                    <input
+                                        type="number"
+                                        th:name="${game.gemColorName(i)}"
+                                        min="0"
+                                        max="2"
+                                        value="0"
+                                        th:disabled="${game.bankCoins[i] == 0 or game.currentPlayer.uuid != myUuid}"
+                                        class="w-14 bg-slate-900 border border-slate-600 rounded text-center text-white disabled:opacity-50"
+                                    />
+                                </div>
+
+                                <div class="flex flex-col items-center gap-2 opacity-80">
+                                    <div class="relative w-16 h-16 rounded-full border-2 border-yellow-600 shadow-xl flex items-center justify-center font-bold gem-gold">
+                                        <span
+                                            class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-yellow-500/50"
+                                            th:text="${game.bankCoins[5]}"
+                                        ></span>
+                                    </div>
+                                    <div class="text-xs text-slate-500 uppercase mt-1">Reserve Only</div>
+                                </div>
+                            </div>
+
+                            <div class="w-full sm:w-auto text-center">
+                                <button
+                                    th:if="${game.currentPlayer.uuid == myUuid}"
+                                    type="submit"
+                                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:cursor-pointer"
+                                >
+                                    Take Coins
+                                </button>
+                                <div th:if="${game.currentPlayer.uuid != myUuid}" class="text-yellow-500 font-bold text-sm">
+                                    Waiting for
+                                    <span th:text="${game.currentPlayer.name}"></span>...
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full xl:w-1/4 flex flex-col gap-4">
+                <div
+                    th:each="p, pStat : ${game.players}"
+                    th:class="'rounded-xl p-4 transition-all duration-300 ' + (${pStat.index == game.getCurrentTurnIndex()} ? 'bg-slate-700 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-slate-800 border border-slate-700') + (${p.ejected} ? ' opacity-50' : '')"
+                >
                     <div
-                      th:class="'w-8 h-8 rounded-full shadow-[0_0_10px_rgba(0,0,0,0.8)] border-2 border-white/90 gem-' + ${card.gemColor.name().toLowerCase()}"
-                    ></div>
-                  </div>
-
-                  <div class="flex flex-col gap-0.5 items-start mt-auto">
-                    <span
-                      th:each="i : ${#numbers.sequence(0, 4)}"
-                      th:if="${card.cost[i] > 0}"
-                      th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
-                      th:text="${card.cost[i]}"
-                    ></span>
-                  </div>
-
-                  <div
-                    th:if="${!game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
-                    class="absolute inset-0 bg-slate-900/80 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity"
-                  >
-                    <form
-                      th:action="@{|/game/${roomId}/buy-card|}"
-                      method="post"
+                        th:if="${myUuid == game.hostUuid and p.uuid != myUuid and (p.isDisconnected() or game.isPlayerIdle(p)) and !p.ejected}"
+                        class="mb-3 bg-red-900/50 border border-red-500 rounded p-2 text-center"
                     >
-                      <input
-                        type="hidden"
-                        name="cardIndex"
-                        th:value="${slotIndex}"
-                      /><button
-                        type="submit"
-                        class="bg-green-600 hover:bg-green-500 text-white font-bold py-1.5 px-4 rounded shadow hover:cursor-pointer"
-                      >
-                        Buy
-                      </button>
-                    </form>
-                    <form
-                      th:action="@{|/game/${roomId}/reserve-card|}"
-                      method="post"
-                    >
-                      <input
-                        type="hidden"
-                        name="cardIndex"
-                        th:value="${slotIndex}"
-                      /><button
-                        type="submit"
-                        class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1.5 px-4 rounded shadow hover:cursor-pointer"
-                      >
-                        Reserve
-                      </button>
-                    </form>
-                  </div>
+                        <p
+                            class="text-xs text-red-200 mb-2 font-bold uppercase tracking-wider"
+                            th:text="${p.isDisconnected()} ? 'Player Disconnected!' : 'Player AFK (3+ Mins)!'"
+                        ></p>
+                        <div class="flex gap-2 justify-center">
+                            <form th:action="@{|/game/${roomId}/host-action/ai|}" method="post">
+                                <input type="hidden" name="targetUuid" th:value="${p.uuid}" /><button
+                                    type="submit"
+                                    class="text-xs bg-slate-900 hover:bg-slate-700 text-white px-2 py-1 rounded border border-slate-600 hover:cursor-pointer"
+                                >
+                                    AI Takeover
+                                </button>
+                            </form>
+                            <form th:action="@{|/game/${roomId}/host-action/eject|}" method="post">
+                                <input type="hidden" name="targetUuid" th:value="${p.uuid}" /><button
+                                    type="submit"
+                                    class="text-xs bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded border border-red-800 hover:cursor-pointer"
+                                >
+                                    Eject
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-600 pb-2">
+                        <h3 class="text-lg font-bold truncate">
+                            <span th:text="${p.name}"></span>
+                            <span th:if="${p.uuid == myUuid}" class="text-yellow-500 text-xs align-super">(You)</span>
+                            <span th:if="${p.ai}" class="text-purple-400 text-xs align-super">(CPU)</span>
+                        </h3>
+                        <div class="bg-yellow-500 text-yellow-950 font-black px-3 py-1 rounded-full shadow text-lg" th:text="${p.score}"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <h4 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Coins</h4>
+                            <div class="flex flex-wrap gap-1">
+                                <span
+                                    th:each="i : ${#numbers.sequence(0, 5)}"
+                                    th:if="${p.getCoins()[i] > 0}"
+                                    th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
+                                    th:text="${p.getCoins()[i]}"
+                                ></span>
+                                <span th:if="${p.getTotalCoins() == 0}" class="text-slate-600 italic">None</span>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Bonuses</h4>
+                            <div class="flex flex-wrap gap-1">
+                                <span
+                                    th:each="i : ${#numbers.sequence(0, 4)}"
+                                    th:if="${p.getBonuses()[i] > 0}"
+                                    th:class="'cost-icon border-none rounded-sm gem-' + ${game.gemColorName(i)}"
+                                    th:text="'+' + ${p.getBonuses()[i]}"
+                                ></span>
+                                <span
+                                    th:if="${p.getBonuses()[0]+p.getBonuses()[1]+p.getBonuses()[2]+p.getBonuses()[3]+p.getBonuses()[4] == 0}"
+                                    class="text-slate-600 italic"
+                                    >None</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${!p.reservedCards.isEmpty()}" class="mt-4 pt-3 border-t border-slate-600">
+                        <h4 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Reserved</h4>
+                        <div class="flex gap-2 overflow-x-auto pb-1">
+                            <th:block th:each="rc, rcStat : ${p.reservedCards}">
+                                <div
+                                    th:if="${p.uuid != myUuid and rc.blind}"
+                                    class="relative shrink-0 w-16 h-24 rounded border-2 border-slate-600 shadow-inner flex flex-col items-center justify-center p-1 bg-slate-700 cursor-not-allowed"
+                                >
+                                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Tier</span>
+                                    <span class="text-2xl font-black text-slate-500" th:text="${rc.tier}">1</span>
+                                    <div class="mt-auto mb-1 text-[9px] text-slate-400 uppercase font-bold tracking-wider">Hidden</div>
+                                </div>
+
+                                <div
+                                    th:unless="${p.uuid != myUuid and rc.blind}"
+                                    tabindex="0"
+                                    th:class="'relative shrink-0 w-16 h-24 rounded border border-slate-400/50 shadow flex flex-col justify-between p-1 cursor-pointer focus:outline-none group card-bg-' + ${rc.gemColor.name().toLowerCase()}"
+                                >
+                                    <div class="flex justify-between items-start mb-1 w-full">
+                                        <div th:if="${rc.value > 0}" class="bg-black/70 px-1.5 py-0.5 rounded-br-md rounded-tl-sm shadow-sm">
+                                            <span class="text-xs font-black text-white" th:text="${rc.value}"></span>
+                                        </div>
+                                        <div th:if="${rc.value == 0}"></div>
+                                        <div
+                                            th:class="'w-5 h-5 shrink-0 rounded-full shadow-[0_0_5px_rgba(0,0,0,0.8)] border border-white/90 gem-' + ${rc.gemColor.name().toLowerCase()}"
+                                        ></div>
+                                    </div>
+
+                                    <div class="flex flex-wrap justify-end gap-px mt-auto">
+                                        <span
+                                            th:each="i : ${#numbers.sequence(0, 4)}"
+                                            th:if="${rc.cost[i] > 0}"
+                                            th:class="'w-3 h-3 text-[10px] leading-none rounded-full flex items-center justify-center border border-white/30 gem-' + ${game.gemColorName(i)}"
+                                            th:text="${rc.cost[i]}"
+                                        ></span>
+                                    </div>
+
+                                    <form
+                                        th:if="${pStat.index == game.getCurrentTurnIndex() and !game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
+                                        th:action="@{|/game/${roomId}/buy-card|}"
+                                        method="post"
+                                        class="absolute inset-0 bg-slate-900/90 opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity rounded"
+                                    >
+                                        <input type="hidden" name="cardIndex" th:value="${-(rcStat.index + 1)}" />
+                                        <button type="submit" class="text-xs bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-2 rounded hover:cursor-pointer">
+                                            Buy
+                                        </button>
+                                    </form>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+
+                    <div th:if="${!p.obtainedNobles.isEmpty()}" class="mt-4 pt-3 border-t border-slate-600">
+                        <h4 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2">Nobles</h4>
+                        <div class="flex gap-2 overflow-x-auto pb-1">
+                            <div
+                                th:each="n, nStat : ${p.obtainedNobles}"
+                                class="relative shrink-0 w-12 h-16 border-2 border-yellow-500 shadow-md flex items-center justify-center rounded-lg bg-cover bg-center"
+                                th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + ${n.imageId} + '.png)'"
+                                title="Obtained Noble"
+                            >
+                                <span class="text-lg font-black text-white drop-shadow-md leading-none" th:text="${n.victoryPoints}">3</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-              </div>
             </div>
-          </div>
         </div>
 
-        <div
-          class="bg-slate-800 border border-slate-700 rounded-xl p-4 shadow-md"
-        >
-          <div th:if="${game.pendingNobleChoice}">
-            <div th:if="${game.currentPlayer.uuid == myUuid}">
-              <h3 class="text-yellow-400 font-bold mb-2">Noble Visit!</h3>
-              <p class="text-sm text-slate-300 mb-4">
-                You have attracted multiple nobles. Choose one to keep.
-              </p>
-              <div class="flex flex-wrap gap-4">
-                <div
-                  th:each="noble, nStat : ${game.pendingNobles}"
-                  tabindex="0"
-                  class="relative w-20 h-24 border-2 border-yellow-500 rounded-lg shadow-lg flex flex-col justify-between p-1.5 transition-transform hover:-translate-y-1 cursor-pointer focus:outline-none group bg-cover bg-center"
-                  th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + (${nStat.index % 10} + 1) + '.png)'"
-                >
-                  <div
-                    class="text-lg font-black text-white drop-shadow-md leading-none"
-                    th:text="${noble.victoryPoints}"
-                  >
-                    3
-                  </div>
-                  <div class="flex flex-wrap gap-0.5 justify-end">
-                    <span
-                      th:each="i : ${#numbers.sequence(0, 4)}"
-                      th:if="${noble.requirement[i] > 0}"
-                      th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
-                      th:text="${noble.requirement[i]}"
-                    ></span>
-                  </div>
-                  <form
-                    th:action="@{|/game/${roomId}/claim-noble|}"
-                    method="post"
-                    class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm rounded-lg opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity"
-                  >
-                    <input
-                      type="hidden"
-                      name="nobleIndex"
-                      th:value="${nStat.index}"
-                    />
-                    <button
-                      type="submit"
-                      class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-1 px-3 rounded shadow text-xs hover:cursor-pointer"
-                    >
-                      Claim
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div
-              th:if="${game.currentPlayer.uuid != myUuid}"
-              class="text-yellow-500 font-bold py-4 text-center animate-pulse"
-            >
-              Waiting for <span th:text="${game.currentPlayer.name}"></span> to
-              choose a Noble...
-            </div>
-          </div>
-
-          <div th:if="${game.pendingDiscard and !game.pendingNobleChoice}">
-            <div th:if="${game.currentPlayer.uuid == myUuid}">
-              <h3 class="text-red-400 font-bold mb-2">
-                Discard Coins Required!
-              </h3>
-              <p class="text-sm text-slate-300 mb-4">
-                You have
-                <strong th:text="${game.currentPlayer.totalCoins}"></strong>
-                coins. Discard
-                <strong th:text="${game.currentPlayer.totalCoins - 10}"></strong
-                >.
-              </p>
-              <div class="flex flex-wrap gap-4">
-                <div
-                  th:each="i : ${#numbers.sequence(0, 5)}"
-                  th:if="${game.currentPlayer.getCoins()[i] > 0}"
-                  class="flex flex-col items-center gap-2"
-                >
-                  <div
-                    th:class="'relative w-16 h-16 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center font-bold gem-' + ${game.gemColorName(i)}"
-                  >
-                    <span
-                      class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-white/20"
-                      th:text="${game.currentPlayer.getCoins()[i]}"
-                    ></span>
-                  </div>
-                  <form
-                    th:action="@{|/game/${roomId}/discard-coins|}"
-                    method="post"
-                  >
-                    <input
-                      type="hidden"
-                      name="color"
-                      th:value="${game.gemColorName(i).toUpperCase()}"
-                    />
-                    <button
-                      type="submit"
-                      class="text-xs bg-red-700 hover:bg-red-600 px-3 py-1 rounded text-white hover:cursor-pointer"
-                    >
-                      Discard
-                    </button>
-                  </form>
-                </div>
-              </div>
-            </div>
-            <div
-              th:if="${game.currentPlayer.uuid != myUuid}"
-              class="text-yellow-500 font-bold py-4 text-center animate-pulse"
-            >
-              Waiting for <span th:text="${game.currentPlayer.name}"></span> to
-              discard coins...
-            </div>
-          </div>
-
-          <div th:if="${!game.pendingDiscard and !game.pendingNobleChoice}">
-            <h3
-              class="text-xs uppercase tracking-widest text-slate-500 font-bold mb-4"
-            >
-              Coin Bank
-            </h3>
-            <form
-              th:action="@{|/game/${roomId}/take-coins|}"
-              method="post"
-              class="flex flex-col sm:flex-row justify-between items-center gap-4"
-            >
-              <div class="flex flex-wrap justify-center gap-4">
-                <div
-                  th:each="i : ${#numbers.sequence(0, 4)}"
-                  class="flex flex-col items-center gap-2"
-                >
-                  <div
-                    th:class="'relative w-16 h-16 rounded-full border-2 border-slate-600 shadow-xl flex items-center justify-center font-bold gem-' + ${game.gemColorName(i)}"
-                  >
-                    <span
-                      class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-white/20"
-                      th:text="${game.bankCoins[i]}"
-                    ></span>
-                  </div>
-                  <input
-                    type="number"
-                    th:name="${game.gemColorName(i)}"
-                    min="0"
-                    max="2"
-                    value="0"
-                    th:disabled="${game.bankCoins[i] == 0 or game.currentPlayer.uuid != myUuid}"
-                    class="w-14 bg-slate-900 border border-slate-600 rounded text-center text-white disabled:opacity-50"
-                  />
-                </div>
-
-                <div class="flex flex-col items-center gap-2 opacity-80">
-                  <div
-                    class="relative w-16 h-16 rounded-full border-2 border-yellow-600 shadow-xl flex items-center justify-center font-bold gem-gold"
-                  >
-                    <span
-                      class="bg-black/80 text-white text-xl w-8 h-8 flex items-center justify-center rounded-full border border-yellow-500/50"
-                      th:text="${game.bankCoins[5]}"
-                    ></span>
-                  </div>
-                  <div class="text-xs text-slate-500 uppercase mt-1">
-                    Reserve Only
-                  </div>
-                </div>
-              </div>
-
-              <div class="w-full sm:w-auto text-center">
-                <button
-                  th:if="${game.currentPlayer.uuid == myUuid}"
-                  type="submit"
-                  class="w-full sm:w-auto bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-lg shadow-lg hover:cursor-pointer"
-                >
-                  Take Coins
-                </button>
-                <div
-                  th:if="${game.currentPlayer.uuid != myUuid}"
-                  class="text-yellow-500 font-bold text-sm"
-                >
-                  Waiting for
-                  <span th:text="${game.currentPlayer.name}"></span>...
-                </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div class="w-full xl:w-1/4 flex flex-col gap-4">
-        <div
-          th:each="p, pStat : ${game.players}"
-          th:class="'rounded-xl p-4 transition-all duration-300 ' + (${pStat.index == game.getCurrentTurnIndex()} ? 'bg-slate-700 border-2 border-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.2)]' : 'bg-slate-800 border border-slate-700') + (${p.ejected} ? ' opacity-50' : '')"
-        >
-          <div
-            th:if="${myUuid == game.hostUuid and p.uuid != myUuid and p.isDisconnected() and !p.ejected}"
-            class="mb-3 bg-red-900/50 border border-red-500 rounded p-2 text-center"
-          >
-            <p
-              class="text-xs text-red-200 mb-2 font-bold uppercase tracking-wider"
-            >
-              Player Disconnected!
-            </p>
-            <div class="flex gap-2 justify-center">
-              <form
-                th:action="@{|/game/${roomId}/host-action/ai|}"
-                method="post"
-              >
-                <input
-                  type="hidden"
-                  name="targetUuid"
-                  th:value="${p.uuid}"
-                /><button
-                  type="submit"
-                  class="text-xs bg-slate-900 hover:bg-slate-700 text-white px-2 py-1 rounded border border-slate-600 hover:cursor-pointer"
-                >
-                  AI Takeover
-                </button>
-              </form>
-              <form
-                th:action="@{|/game/${roomId}/host-action/eject|}"
-                method="post"
-              >
-                <input
-                  type="hidden"
-                  name="targetUuid"
-                  th:value="${p.uuid}"
-                /><button
-                  type="submit"
-                  class="text-xs bg-red-700 hover:bg-red-600 text-white px-2 py-1 rounded border border-red-800 hover:cursor-pointer"
-                >
-                  Eject
-                </button>
-              </form>
-            </div>
-          </div>
-
-          <div
-            class="flex justify-between items-center mb-4 border-b border-slate-600 pb-2"
-          >
-            <h3 class="text-lg font-bold truncate">
-              <span th:text="${p.name}"></span>
-              <span
-                th:if="${p.uuid == myUuid}"
-                class="text-yellow-500 text-xs align-super"
-                >(You)</span
-              >
-              <span th:if="${p.ai}" class="text-purple-400 text-xs align-super"
-                >(CPU)</span
-              >
-            </h3>
-            <div
-              class="bg-yellow-500 text-yellow-950 font-black px-3 py-1 rounded-full shadow text-lg"
-              th:text="${p.score}"
-            ></div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <h4
-                class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2"
-              >
-                Coins
-              </h4>
-              <div class="flex flex-wrap gap-1">
-                <span
-                  th:each="i : ${#numbers.sequence(0, 5)}"
-                  th:if="${p.getCoins()[i] > 0}"
-                  th:class="'cost-icon gem-' + ${game.gemColorName(i)}"
-                  th:text="${p.getCoins()[i]}"
-                ></span>
-                <span
-                  th:if="${p.getTotalCoins() == 0}"
-                  class="text-slate-600 italic"
-                  >None</span
-                >
-              </div>
-            </div>
-            <div>
-              <h4
-                class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2"
-              >
-                Bonuses
-              </h4>
-              <div class="flex flex-wrap gap-1">
-                <span
-                  th:each="i : ${#numbers.sequence(0, 4)}"
-                  th:if="${p.getBonuses()[i] > 0}"
-                  th:class="'cost-icon border-none rounded-sm gem-' + ${game.gemColorName(i)}"
-                  th:text="'+' + ${p.getBonuses()[i]}"
-                ></span>
-                <span
-                  th:if="${p.getBonuses()[0]+p.getBonuses()[1]+p.getBonuses()[2]+p.getBonuses()[3]+p.getBonuses()[4] == 0}"
-                  class="text-slate-600 italic"
-                  >None</span
-                >
-              </div>
-            </div>
-          </div>
-
-          <div
-            th:if="${!p.reservedCards.isEmpty()}"
-            class="mt-4 pt-3 border-t border-slate-600"
-          >
-            <h4
-              class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2"
-            >
-              Reserved
-            </h4>
-            <div class="flex gap-2 overflow-x-auto pb-1">
-              <div
-                th:each="rc, rcStat : ${p.reservedCards}"
-                tabindex="0"
-                th:class="'relative shrink-0 w-16 h-24 rounded border border-slate-400/50 shadow flex flex-col justify-between p-1 cursor-pointer focus:outline-none group card-bg-' + ${rc.gemColor.name().toLowerCase()}"
-              >
-                <div class="flex justify-between items-start mb-1 w-full">
-                  <div
-                    th:if="${rc.value > 0}"
-                    class="bg-black/70 px-1.5 py-0.5 rounded-br-md rounded-tl-sm shadow-sm"
-                  >
-                    <span
-                      class="text-xs font-black text-white"
-                      th:text="${rc.value}"
-                    ></span>
-                  </div>
-                  <div th:if="${rc.value == 0}"></div>
-                  <div
-                    th:class="'w-5 h-5 shrink-0 rounded-full shadow-[0_0_5px_rgba(0,0,0,0.8)] border border-white/90 gem-' + ${rc.gemColor.name().toLowerCase()}"
-                  ></div>
-                </div>
-
-                <div class="flex flex-wrap justify-end gap-px mt-auto">
-                  <span
-                    th:each="i : ${#numbers.sequence(0, 4)}"
-                    th:if="${rc.cost[i] > 0}"
-                    th:class="'w-3 h-3 text-[10px] leading-none rounded-full flex items-center justify-center border border-white/30 gem-' + ${game.gemColorName(i)}"
-                    th:text="${rc.cost[i]}"
-                  ></span>
-                </div>
-
-                <form
-                  th:if="${pStat.index == game.getCurrentTurnIndex() and !game.pendingDiscard and !game.pendingNobleChoice and game.currentPlayer.uuid == myUuid}"
-                  th:action="@{|/game/${roomId}/buy-card|}"
-                  method="post"
-                  class="absolute inset-0 bg-slate-900/90 opacity-0 group-hover:opacity-100 group-focus:opacity-100 focus-within:opacity-100 flex items-center justify-center transition-opacity rounded"
-                >
-                  <input
-                    type="hidden"
-                    name="cardIndex"
-                    th:value="${-(rcStat.index + 1)}"
-                  />
-                  <button
-                    type="submit"
-                    class="text-xs bg-green-600 hover:bg-green-500 text-white font-bold py-1 px-2 rounded hover:cursor-pointer"
-                  >
-                    Buy
-                  </button>
-                </form>
-              </div>
-            </div>
-          </div>
-
-          <div
-            th:if="${!p.obtainedNobles.isEmpty()}"
-            class="mt-4 pt-3 border-t border-slate-600"
-          >
-            <h4
-              class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-2"
-            >
-              Nobles
-            </h4>
-            <div class="flex gap-2 overflow-x-auto pb-1">
-              <div
-                th:each="n, nStat : ${p.obtainedNobles}"
-                class="relative shrink-0 w-12 h-16 border-2 border-yellow-500 shadow-md flex items-center justify-center rounded-lg bg-cover bg-center"
-                th:style="'background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.8)), url(/images/nobles/noble-' + (${nStat.index % 10} + 1) + '.png)'"
-                title="Obtained Noble"
-              >
-                <span
-                  class="text-lg font-black text-white drop-shadow-md leading-none"
-                  th:text="${n.victoryPoints}"
-                  >3</span
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script th:inline="javascript">
-      var roomId = /*[[${roomId}]]*/ "default-room";
-      setInterval(function () {
-        fetch("/game/" + roomId + "/ping", { method: "POST" });
-      }, 5000);
-      var stompClient = Stomp.over(new SockJS("/splendor-websocket"));
-      stompClient.debug = null;
-      stompClient.connect({}, function () {
-        stompClient.subscribe("/topic/room/" + roomId, function () {
-          window.location.reload();
-        });
-      });
-    </script>
-  </body>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+        <script th:inline="javascript">
+            var roomId = /*[[${roomId}]]*/ "default-room";
+            setInterval(function () {
+                fetch("/game/" + roomId + "/ping", { method: "POST" });
+            }, 5000);
+            var stompClient = Stomp.over(new SockJS("/splendor-websocket"));
+            stompClient.debug = null;
+            stompClient.connect({}, function () {
+                stompClient.subscribe("/topic/room/" + roomId, function () {
+                    window.location.reload();
+                });
+            });
+        </script>
+    </body>
 </html>

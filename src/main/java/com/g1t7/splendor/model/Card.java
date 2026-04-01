@@ -1,12 +1,9 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
-
 /**
- * Represents a playable development card in the game.
- * Acts as a pure Data Transfer Object (POJO).
+ * One development card on the board or in a deck.
  */
-public class Card implements Serializable {
+public class Card {
 
     private int tier;
     private GemColor gemColor;
@@ -16,11 +13,11 @@ public class Card implements Serializable {
     // always 0 cost)
     private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
-    private String imagePath;
+    private boolean blind = false; // true if card is face-down in a deck (not visible to players)
 
-    public Card() {
-    }
-
+    /**
+     * Creates a new development card.
+     */
     public Card(int tier, GemColor gemColor, int value, int[] cost) {
         this.tier = tier;
         this.gemColor = gemColor;
@@ -34,24 +31,7 @@ public class Card implements Serializable {
         return tier;
     }
 
-    public void setTier(int tier) {
-        this.tier = tier;
-    }
-
     public GemColor getGemColor() {
-        return gemColor;
-    }
-
-    public void setGemColor(GemColor gemColor) {
-        this.gemColor = gemColor;
-    }
-
-    /**
-     * * Alias kept specifically for Thymeleaf template convenience.
-     * 
-     * @return The gem color bonus this card provides.
-     */
-    public GemColor getColor() {
         return gemColor;
     }
 
@@ -59,16 +39,8 @@ public class Card implements Serializable {
         return value;
     }
 
-    public void setValue(int value) {
-        this.value = value;
-    }
-
     public int[] getCost() {
         return cost;
-    }
-
-    public void setCost(int[] cost) {
-        this.cost = cost;
     }
 
     public boolean isReserved() {
@@ -79,11 +51,11 @@ public class Card implements Serializable {
         this.reserved = reserved;
     }
 
-    public String getImagePath() {
-        return imagePath;
+    public boolean isBlind() {
+        return blind;
     }
 
-    public void setImagePath(String imagePath) {
-        this.imagePath = imagePath;
+    public void setBlind(boolean blind) {
+        this.blind = blind;
     }
 }

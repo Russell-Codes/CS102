@@ -7,17 +7,20 @@ import java.io.*;
 import java.util.Properties;
 
 /**
- * Reads game parameters from resources/config.properties.
- * Falls back to Splendor default values when a key or file is missing.
+ * Loads game settings and data file paths.
+ *
+ * <p>
+ * It tries an external config file first, then the classpath copy,
+ * and finally falls back to defaults in this class.
  */
-public class GameConfig implements Serializable {
+public class GameConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(GameConfig.class);
-    private static final String CONFIG_PATH = "game/config/config.properties";
+    private final String CONFIG_PATH = "game/config/config.properties";
 
     private int winScore = 15;
-    private static String cardFile = "game/config/cards.csv";
-    private static String nobleFile = "game/config/nobles.csv";
+    private String cardFile = "game/config/cards.csv";
+    private String nobleFile = "game/config/nobles.csv";
 
     // Gem counts by number of players (index 0 unused, 2–4 used)
     private int gems2Players = 4;
@@ -32,10 +35,17 @@ public class GameConfig implements Serializable {
     // Gold coins (always 5 in standard Splendor)
     private int goldCoins = 5;
 
+    /**
+     * Creates a config object and loads values immediately.
+     */
     public GameConfig() {
         load();
     }
 
+    /**
+     * Loads values from file/classpath and keeps defaults for anything missing or
+     * invalid.
+     */
     private void load() {
         Properties props = new Properties();
         File file = new File(CONFIG_PATH);
@@ -47,11 +57,11 @@ public class GameConfig implements Serializable {
                 logger.error("Error loading config from file: {}", CONFIG_PATH, e);
             }
         } else {
-            try (InputStream is = getClass().getClassLoader().getResourceAsStream(GameConfig.CONFIG_PATH)) {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream(this.CONFIG_PATH)) {
                 if (is != null)
                     props.load(is);
             } catch (IOException e) {
-                logger.error("Error loading config from classpath: {}", GameConfig.CONFIG_PATH, e);
+                logger.error("Error loading config from classpath: {}", this.CONFIG_PATH, e);
             }
         }
 
@@ -71,6 +81,14 @@ public class GameConfig implements Serializable {
                 nobles4Players);
     }
 
+    /**
+     * Reads an integer property, with fallback on missing/invalid values.
+     *
+     * @param props      source properties map
+     * @param key        configuration key to resolve
+     * @param defaultVal fallback value when key is missing or invalid
+     * @return parsed value or default
+     */
     private int getInt(Properties props, String key, int defaultVal) {
         String val = props.getProperty(key);
         if (val == null)
@@ -82,6 +100,12 @@ public class GameConfig implements Serializable {
         }
     }
 
+    /**
+     * Gets per-color gem count for the given player count.
+     *
+     * @param numPlayers current number of players
+     * @return gems per color in the bank
+     */
     public int getGemCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> gems3Players;
@@ -90,6 +114,12 @@ public class GameConfig implements Serializable {
         };
     }
 
+    /**
+     * Gets how many nobles should be in play for the player count.
+     *
+     * @param numPlayers current number of players
+     * @return number of nobles in play
+     */
     public int getNobleCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> nobles3Players;
@@ -102,11 +132,11 @@ public class GameConfig implements Serializable {
         return winScore;
     }
 
-    public static String getCardFile() {
+    public String getCardFile() {
         return cardFile;
     }
 
-    public static String getNobleFile() {
+    public String getNobleFile() {
         return nobleFile;
     }
 

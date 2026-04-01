@@ -1,18 +1,20 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import com.g1t7.splendor.config.GameConfig;
 
-public class Game implements Serializable {
+/**
+ * Holds the full state of one Splendor game.
+ */
+public class Game {
 
     // --- CONSTANTS ---
     public static final int VISIBLE_CARDS_PER_TIER = 4;
     public static final int TOTAL_VISIBLE_CARDS = 12;
-    public static final int TOTAL_COIN_TYPES = 6;
+    public static final int TOTAL_COIN_TYPES = Player.TOTAL_COIN_TYPES;
 
     private GameConfig config;
     private int[] bankCoins = new int[TOTAL_COIN_TYPES];
@@ -23,7 +25,6 @@ public class Game implements Serializable {
     private List<Noble> activeNobles = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
 
-    private Card pendingCard = null;
     private int currentTurnIndex = 0;
     private String message = "";
     private boolean finalRound = false;
@@ -37,15 +38,22 @@ public class Game implements Serializable {
     private boolean started = false;
     private String hostUuid;
     private long lastActivityTime = System.currentTimeMillis();
+    private final long MAX_IDLE_TIME_MS = 30000; // 30 seconds
 
     public Game() {
         config = new GameConfig();
     }
 
+    /**
+     * @return player whose turn it is
+     */
     public Player getCurrentPlayer() {
         return players.get(currentTurnIndex);
     }
 
+    /**
+     * @return true when the game has ended
+     */
     public boolean isGameOver() {
         return gameOver;
     }
@@ -54,22 +62,36 @@ public class Game implements Serializable {
         this.gameOver = gameOver;
     }
 
+    /**
+     * Picks a winner by score, then by fewer bought cards on ties.
+     * Ignores any players who have been ejected.
+     */
     public Player getWinner() {
         return players.stream()
+                .filter(p -> !p.isEjected()) // <-- ADD THIS LINE to disqualify ejected players
                 .max(Comparator.comparingInt(Player::getScore)
                         .thenComparing(Comparator.comparingInt((Player p) -> p.getCards().size()).reversed()))
                 .orElse(players.get(0));
     }
 
+    /**
+     * Converts a gem index to a lowercase name for the UI.
+     */
     public String gemColorName(int i) {
         return GemColor.fromIndex(i).name().toLowerCase();
     }
 
+    /**
+     * Returns the four visible cards for one tier.
+     */
     public List<Card> getVisibleCardsForTier(int tier) {
         int start = (tier - 1) * VISIBLE_CARDS_PER_TIER;
         return visibleCards.subList(start, start + VISIBLE_CARDS_PER_TIER);
     }
 
+    /**
+     * Returns remaining deck size for a tier.
+     */
     public int getDeckSize(int tier) {
         if (tier == 1)
             return tier1Deck.size();
@@ -78,6 +100,21 @@ public class Game implements Serializable {
         return tier3Deck.size();
     }
 
+    /**
+     * Checks if the given player is the current player AND has been idle for > 3
+     * minutes.
+     */
+    public boolean isPlayerIdle(Player p) {
+        if (players.isEmpty() || p != getCurrentPlayer()) {
+            return false;
+        }
+        // 180000 ms = 3 minutes
+        return (System.currentTimeMillis() - lastActivityTime) > MAX_IDLE_TIME_MS;
+    }
+
+    /**
+     * @return score that triggers the endgame
+     */
     public int getWinScore() {
         return config.getWinScore();
     }
@@ -121,18 +158,6 @@ public class Game implements Serializable {
 
     public List<Player> getPlayers() {
         return players;
-    }
-
-    public void setPlayers(List<Player> players) {
-        this.players = players;
-    }
-
-    public Card getPendingCard() {
-        return pendingCard;
-    }
-
-    public void setPendingCard(Card pendingCard) {
-        this.pendingCard = pendingCard;
     }
 
     public int getCurrentTurnIndex() {

@@ -1,33 +1,29 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Stack;
 
 /**
- * Represents a player in the Splendor game.
- * This is a pure data model (POJO) containing the player's state.
+ * Stores one player's game state.
  */
-public class Player implements Serializable {
+public class Player {
 
     // --- CONSTANTS ---
     public static final int MAX_COIN_LIMIT = 10;
-    public static final int DISCONNECT_TIMEOUT_MS = 30000;
-    public static final int TOTAL_COIN_TYPES = 6;
-    public static final int REGULAR_GEM_TYPES = 5;
+    public static final int DISCONNECT_TIMEOUT_MS = 30000; // 30 seconds
+    public static final int TOTAL_COIN_TYPES = GemColor.values().length; // Includes GOLD
+    public static final int REGULAR_GEM_TYPES = GemColor.values().length - 1; // Exclude GOLD
 
-    private boolean online = true;
     private boolean ai = false;
     private String name;
     private int score;
 
-    // Clean Code: Renamed from 'myCoins' and 'myCards'
+    // Coin counts and permanent card bonuses.
     private int[] coins = new int[TOTAL_COIN_TYPES];
     private int[] bonuses = new int[REGULAR_GEM_TYPES];
 
     private List<Card> reservedCards = new ArrayList<>();
-    private Stack<Card> cards = new Stack<>();
+    private List<Card> cards = new ArrayList<>();
     private List<Noble> obtainedNobles = new ArrayList<>();
 
     // --- MULTIPLAYER FIELDS ---
@@ -36,22 +32,23 @@ public class Player implements Serializable {
     private boolean isEjected = false;
     private long lastHeartbeat = System.currentTimeMillis();
 
-    public Player() {
-    }
-
-    // FIXED: Removed the 'Game' object from the constructor to break the circular
-    // dependency
+    /**
+     * Creates a human player with the given display name.
+     */
     public Player(String name) {
         this.name = name;
     }
 
+    /**
+     * Creates a player and sets whether it is AI-controlled.
+     */
     public Player(String name, boolean ai) {
         this.name = name;
         this.ai = ai;
     }
 
     /**
-     * Checks if a human player has timed out due to inactivity.
+     * Checks whether a human player timed out due to inactivity.
      * 
      * @return true if the player has disconnected, false otherwise.
      */
@@ -62,7 +59,7 @@ public class Player implements Serializable {
     }
 
     /**
-     * Calculates the total number of coins currently held by the player.
+     * Counts all coins currently held by the player.
      * 
      * @return the total coin count.
      */
@@ -74,15 +71,6 @@ public class Player implements Serializable {
     }
 
     // --- GETTERS AND SETTERS ---
-
-    public boolean isOnline() {
-        return online;
-    }
-
-    public void setOnline(boolean online) {
-        this.online = online;
-    }
-
     public boolean isAi() {
         return ai;
     }
@@ -107,28 +95,19 @@ public class Player implements Serializable {
         this.score = score;
     }
 
-    // FIXED: Renamed Getters/Setters
     public int[] getCoins() {
         return coins;
-    }
-
-    public void setCoins(int[] coins) {
-        this.coins = coins;
     }
 
     public int[] getBonuses() {
         return bonuses;
     }
 
-    public void setBonuses(int[] bonuses) {
-        this.bonuses = bonuses;
-    }
-
     public List<Card> getReservedCards() {
         return reservedCards;
     }
 
-    public Stack<Card> getCards() {
+    public List<Card> getCards() {
         return cards;
     }
 

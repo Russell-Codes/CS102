@@ -1,27 +1,39 @@
 package com.g1t7.splendor.controller;
 
 import com.g1t7.splendor.service.GameManager;
+import com.g1t7.splendor.service.GameEngineService;
 import com.g1t7.splendor.service.GamePlayService;
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Handles game actions for a room.
+ */
 @Controller
 @RequestMapping("/game/{roomId}")
 public class GameController {
 
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
-    @Autowired
-    private GameManager gameManager;
-    @Autowired
-    private GamePlayService gamePlayService; // <-- WE ONLY INJECT THE NEW SERVICE
+    private final SimpMessagingTemplate messagingTemplate;
+    private final GameManager gameManager;
+    private final GamePlayService gamePlayService;
+    private final GameEngineService gameEngineService;
 
+    public GameController(SimpMessagingTemplate messagingTemplate, GameManager gameManager,
+            GamePlayService gamePlayService, GameEngineService gameEngineService) {
+        this.messagingTemplate = messagingTemplate;
+        this.gameManager = gameManager;
+        this.gamePlayService = gamePlayService;
+        this.gameEngineService = gameEngineService;
+    }
+
+    /**
+     * Shows the game page if the room is valid and started.
+     */
     @GetMapping
     public String showGame(@PathVariable String roomId, Model model, HttpSession session) {
         Game game = gameManager.getGame(roomId);
@@ -36,6 +48,9 @@ public class GameController {
         return "game";
     }
 
+    /**
+     * Heartbeat endpoint so the server knows a player is still connected.
+     */
     @PostMapping("/ping")
     @ResponseBody
     public String handlePing(@PathVariable String roomId, HttpSession session) {
@@ -52,24 +67,37 @@ public class GameController {
         return "ok";
     }
 
+    /**
+     * Host action: replace a player with AI.
+     */
     @PostMapping("/host-action/ai")
     public String replaceWithAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String sessionUuid = (String) session.getAttribute("userUuid");
-        if (gameManager.replacePlayerWithAi(roomId, sessionUuid, targetUuid)) {
+        Game game = gameManager.getGame(roomId);
+
+        if (game != null && gameEngineService.replacePlayerWithAi(game, sessionUuid, targetUuid)) {
             refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Host action: eject a player.
+     */
     @PostMapping("/host-action/eject")
     public String ejectPlayer(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String sessionUuid = (String) session.getAttribute("userUuid");
-        if (gameManager.ejectPlayer(roomId, sessionUuid, targetUuid)) {
+        Game game = gameManager.getGame(roomId);
+
+        if (game != null && gameEngineService.ejectPlayer(game, sessionUuid, targetUuid)) {
             refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Current player takes coins.
+     */
     @PostMapping("/take-coins")
     public String takeCoins(@PathVariable String roomId,
             @RequestParam(defaultValue = "0") int white,
@@ -87,6 +115,9 @@ public class GameController {
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Current player buys a card.
+     */
     @PostMapping("/buy-card")
     public String buyCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex, HttpSession session) {
         String userUuid = (String) session.getAttribute("userUuid");
@@ -97,6 +128,9 @@ public class GameController {
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Current player claims one of the pending nobles.
+     */
     @PostMapping("/claim-noble")
     public String claimNoble(@PathVariable String roomId, @RequestParam("nobleIndex") int nobleIndex,
             HttpSession session) {
@@ -108,6 +142,9 @@ public class GameController {
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Current player reserves a visible card.
+     */
     @PostMapping("/reserve-card")
     public String reserveCard(@PathVariable String roomId, @RequestParam("cardIndex") int cardIndex,
             HttpSession session) {
@@ -119,6 +156,9 @@ public class GameController {
         return "redirect:/game/" + roomId;
     }
 
+    /**
+     * Current player discards one coin while over the limit.
+     */
     @PostMapping("/discard-coins")
     public String discardCoins(@PathVariable String roomId, @RequestParam("color") String color, HttpSession session) {
         String userUuid = (String) session.getAttribute("userUuid");
@@ -130,9 +170,22 @@ public class GameController {
     }
 
     /**
-     * Helper method to broadcast a websocket refresh command.
+     * Pushes a refresh event to everyone in the room.
      */
     private void refreshRoom(String roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
+    }
+
+    /**
+     * Current player reserves a card blindly from a tier deck.
+     */
+    @PostMapping("/reserve-deck")
+    public String reserveFromDeck(@PathVariable String roomId, @RequestParam("tier") int tier, HttpSession session) {
+        String userUuid = (String) session.getAttribute("userUuid");
+
+        if (gamePlayService.reserveFromDeck(roomId, userUuid, tier)) {
+            refreshRoom(roomId);
+        }
+        return "redirect:/game/" + roomId;
     }
 }

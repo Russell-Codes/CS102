@@ -3,6 +3,8 @@ package com.g1t7.splendor;
 import com.g1t7.splendor.config.GameConfig;
 import com.g1t7.splendor.model.*;
 import com.g1t7.splendor.service.*;
+import com.g1t7.splendor.util.CardData;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,11 +32,9 @@ class GameLogicTests {
     void setUp() throws Exception {
         // Initialize our clean architecture services manually for testing
         playerActionService = new PlayerActionService();
-        gameEngineService = new GameEngineService();
-        aiPlayerService = new AIPlayer(playerActionService, gameEngineService);
+        aiPlayerService = new AIPlayer(playerActionService);
+        gameEngineService = new GameEngineService(aiPlayerService);
 
-        // Inject the AIPlayer service into GameEngineService (resolving the Spring
-        // @Autowired)
         Field aiField = GameEngineService.class.getDeclaredField("aiPlayer");
         aiField.setAccessible(true);
         aiField.set(gameEngineService, aiPlayerService);
@@ -109,7 +109,6 @@ class GameLogicTests {
         boolean ok = playerActionService.exchangeCoin(game, p1, List.of("WHITE", "BLUE", "GREEN"));
         assertTrue(ok, "Taking 3 different should succeed");
 
-        // FIXED: getMyCoins() -> getCoins()
         assertEquals(1, p1.getCoins()[0]); // white
         assertEquals(1, p1.getCoins()[1]); // blue
         assertEquals(1, p1.getCoins()[2]); // green
@@ -193,7 +192,6 @@ class GameLogicTests {
         assertTrue(ok);
         assertEquals(1, p1.getScore(), "Should gain 1 VP");
 
-        // FIXED: getMyCards() -> getBonuses()
         assertEquals(1, p1.getBonuses()[0], "Should gain white bonus");
         assertEquals(1, p1.getCoins()[0], "Should have 1 white left");
         assertEquals(1, p1.getCoins()[1], "Should have 1 blue left");
@@ -280,7 +278,8 @@ class GameLogicTests {
 
     @Test
     void nobleVisitsWhenRequirementMet() {
-        Noble noble = new Noble(3, 0, 0, 0, 0); // requires 3 white cards
+        // FIXED: Added imageId '1' to constructor
+        Noble noble = new Noble(1, 3, 0, 0, 0, 0);
         game.setActiveNobles(new java.util.ArrayList<>(List.of(noble)));
 
         p1.getBonuses()[0] = 3; // 3 white bonuses
@@ -292,7 +291,8 @@ class GameLogicTests {
 
     @Test
     void nobleDoesNotVisitIfRequirementNotMet() {
-        Noble noble = new Noble(4, 0, 0, 0, 0); // requires 4 white
+        // FIXED: Added imageId '1' to constructor
+        Noble noble = new Noble(1, 4, 0, 0, 0, 0);
         game.setActiveNobles(new java.util.ArrayList<>(List.of(noble)));
 
         p1.getBonuses()[0] = 2;
@@ -303,17 +303,19 @@ class GameLogicTests {
     }
 
     @Test
-    void onlyOneNoblePerTurn() {
-        Noble n1 = new Noble(1, 0, 0, 0, 0);
-        Noble n2 = new Noble(0, 1, 0, 0, 0);
+    void multipleNoblesTriggerPendingChoice() {
+        // FIXED: Tests the new Pending Noble logic instead of immediate points
+        Noble n1 = new Noble(1, 1, 0, 0, 0, 0);
+        Noble n2 = new Noble(2, 0, 1, 0, 0, 0);
         game.setActiveNobles(new java.util.ArrayList<>(List.of(n1, n2)));
 
         p1.getBonuses()[0] = 3;
         p1.getBonuses()[1] = 3;
         playerActionService.checkNobles(game, p1, game.getActiveNobles());
 
-        assertEquals(3, p1.getScore(), "Should gain only 3 VP (one noble)");
-        assertEquals(1, game.getActiveNobles().size(), "Only one noble removed per turn");
+        assertTrue(game.isPendingNobleChoice(), "Game should wait for player to choose a noble");
+        assertEquals(2, game.getPendingNobles().size(), "Both satisfied nobles should be pending");
+        assertEquals(0, p1.getScore(), "Score should not increase until choice is made");
     }
 
     // ===================== Game Over & Tiebreak =====================
@@ -347,11 +349,21 @@ class GameLogicTests {
         p2.setScore(15);
         // P1 bought 5 cards, P2 bought 3 → P2 wins tiebreaker (fewer cards)
         for (int i = 0; i < 5; i++)
-            p1.getCards().push(new Card(1, GemColor.WHITE, 3, new int[6]));
+            p1.getCards().add(new Card(1, GemColor.WHITE, 3, new int[6]));
         for (int i = 0; i < 3; i++)
-            p2.getCards().push(new Card(1, GemColor.WHITE, 5, new int[6]));
+            p2.getCards().add(new Card(1, GemColor.WHITE, 5, new int[6]));
 
         assertEquals(p2, game.getWinner(), "With same score, fewer cards wins");
+    }
+
+    @Test
+    void winnerIgnoresEjectedPlayers() {
+        // Both have 0 score, but P2 is ejected mid-game
+        p1.setScore(0);
+        p2.setScore(0);
+        p2.setEjected(true);
+
+        assertEquals(p1, game.getWinner(), "Ejected player should never win ties");
     }
 
     @Test
