@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.UUID;
 
 /**
- * Handles entry flow into the application: landing page, room creation, and room join.
+ * Handles entry flow into the application: landing page, room creation, and
+ * room join.
  */
 @Controller
 public class LoginController {

@@ -168,7 +168,8 @@ public class GamePlayService {
     }
 
     /**
-     * Resolves a card from visible slots (non-negative index) or reserved cards (negative index).
+     * Resolves a card from visible slots (non-negative index) or reserved cards
+     * (negative index).
      */
     private Card resolveCard(Game game, Player player, int cardIndex) {
         if (cardIndex >= 0 && cardIndex < game.getVisibleCards().size()) {

@@ -14,7 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     /**
-        * Sets broker paths used by clients.
+     * Sets broker paths used by clients.
      *
      * @param config Spring message broker registry
      */
@@ -24,9 +24,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     }
 
     /**
-        * Registers the handshake endpoint.
-        *
-        * <p>SockJS is enabled as a fallback.
+     * Registers the handshake endpoint.
+     *
+     * <p>
+     * SockJS is enabled as a fallback.
      *
      * @param registry Spring STOMP endpoint registry
      */

@@ -25,9 +25,9 @@ public class CardData {
 
     /**
      * Builds the full deck from the configured CSV path.
-      *
-      * @param csvPath classpath location of the CSV file
-      * @return list of cards
+     *
+     * @param csvPath classpath location of the CSV file
+     * @return list of cards
      */
     public static List<Card> buildDeck(String csvPath) {
         List<Card> deck = new ArrayList<>();

@@ -22,14 +22,15 @@ public class LobbyController {
     private final LobbyService lobbyService;
     private final SimpMessagingTemplate messagingTemplate;
 
-    public LobbyController(GameManager gameManager, LobbyService lobbyService, SimpMessagingTemplate messagingTemplate) {
+    public LobbyController(GameManager gameManager, LobbyService lobbyService,
+            SimpMessagingTemplate messagingTemplate) {
         this.gameManager = gameManager;
         this.lobbyService = lobbyService;
         this.messagingTemplate = messagingTemplate;
     }
 
     /**
-        * Shows the lobby page if access checks pass.
+     * Shows the lobby page if access checks pass.
      */
     @GetMapping
     public String showLobby(@PathVariable String roomId, Model model, HttpSession session) {
@@ -64,7 +65,7 @@ public class LobbyController {
     }
 
     /**
-        * Join/update player info and mark the player as ready.
+     * Join/update player info and mark the player as ready.
      */
     @PostMapping("/ready")
     public String setReady(@PathVariable String roomId, @RequestParam String playerName, HttpSession session) {
@@ -84,7 +85,7 @@ public class LobbyController {
     }
 
     /**
-        * Host action: add an AI player.
+     * Host action: add an AI player.
      */
     @PostMapping("/add-ai")
     public String addAi(@PathVariable String roomId, HttpSession session) {
@@ -97,7 +98,7 @@ public class LobbyController {
     }
 
     /**
-        * Host action: remove an AI player.
+     * Host action: remove an AI player.
      */
     @PostMapping("/remove-ai")
     public String removeAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
@@ -110,7 +111,7 @@ public class LobbyController {
     }
 
     /**
-        * Host action: start the game.
+     * Host action: start the game.
      */
     @PostMapping("/start")
     public String startGame(@PathVariable String roomId, HttpSession session) {
@@ -123,7 +124,7 @@ public class LobbyController {
     }
 
     /**
-        * Host action: move a player up or down before the game starts.
+     * Host action: move a player up or down before the game starts.
      */
     @PostMapping("/move-player")
     public String movePlayer(@PathVariable String roomId,

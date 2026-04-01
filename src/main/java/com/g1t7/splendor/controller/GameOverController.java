@@ -25,11 +25,11 @@ public class GameOverController {
     }
 
     /**
-        * Shows the game-over screen for a room.
+     * Shows the game-over screen for a room.
      *
-        * @param roomId finished room ID
-        * @param model page model
-        * @return game-over template, or redirect to home if room is missing
+     * @param roomId finished room ID
+     * @param model  page model
+     * @return game-over template, or redirect to home if room is missing
      */
     @GetMapping("/{roomId}")
     public String showGameOver(@PathVariable String roomId, Model model) {
@@ -45,10 +45,10 @@ public class GameOverController {
     }
 
     /**
-        * Resets the session and sends the player back to home.
+     * Resets the session and sends the player back to home.
      *
-        * @param session current HTTP session
-        * @return redirect to home
+     * @param session current HTTP session
+     * @return redirect to home
      */
     @PostMapping("/restart")
     public String restart(HttpSession session) {

@@ -123,7 +123,8 @@ public class AIPlayer {
     }
 
     /**
-     * Tries to take coins legally, preferring 3 distinct colors needed for a near target card.
+     * Tries to take coins legally, preferring 3 distinct colors needed for a near
+     * target card.
      */
     private boolean tryTakeCoins(Game game, Player player) {
         int[] bankCoins = game.getBankCoins();

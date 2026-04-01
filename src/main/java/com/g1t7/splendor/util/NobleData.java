@@ -24,9 +24,9 @@ public class NobleData {
 
     /**
      * Builds the full list of Nobles from the configured CSV path.
-      *
-      * @param csvPath classpath location of the CSV file
-      * @return list of nobles
+     *
+     * @param csvPath classpath location of the CSV file
+     * @return list of nobles
      */
     public static List<Noble> buildNobles(String csvPath) {
         List<Noble> nobles = new ArrayList<>();
@@ -69,7 +69,7 @@ public class NobleData {
         logger.info("Loaded {} nobles from {}", nobles.size(), csvPath);
         return nobles;
     }
-    
+
     /**
      * Builds fallback nobles used when CSV loading fails.
      */

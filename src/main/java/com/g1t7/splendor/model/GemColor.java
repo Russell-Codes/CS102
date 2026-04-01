@@ -7,7 +7,7 @@ public enum GemColor {
     WHITE, BLUE, GREEN, RED, BLACK, GOLD;
 
     /**
-        * Gets a color from its enum index.
+     * Gets a color from its enum index.
      *
      * @param i ordinal index in enum declaration order
      * @return matching gem color

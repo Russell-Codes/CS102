@@ -21,12 +21,12 @@ public class Noble {
         requirement[GemColor.BLACK.ordinal()] = black;
     }
 
-        /**
-         * Checks whether a player's bonuses satisfy this noble.
-         *
-         * @param cardBonuses current bonus counts by color
-         * @return true if all requirements are met
-         */
+    /**
+     * Checks whether a player's bonuses satisfy this noble.
+     *
+     * @param cardBonuses current bonus counts by color
+     * @return true if all requirements are met
+     */
     public boolean isSatisfiedBy(int[] cardBonuses) {
         for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {
             if (cardBonuses[i] < requirement[i]) {

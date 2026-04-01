@@ -17,7 +17,7 @@ import java.util.List;
 public class PlayerActionService {
 
     /**
-        * Buys a card for a player if they can afford it.
+     * Buys a card for a player if they can afford it.
      */
     public boolean buyCard(Game game, Player player, Card card) {
         if (!canAfford(player, card)) {
@@ -72,11 +72,11 @@ public class PlayerActionService {
     }
 
     /**
-        * Validates and applies a coin-take action.
+     * Validates and applies a coin-take action.
      *
-    * @param game current game state
-    * @param player current player
-    * @param selectedColors chosen colors
+     * @param game           current game state
+     * @param player         current player
+     * @param selectedColors chosen colors
      * @return true if the exchange is legal and processed; false otherwise.
      */
     public boolean exchangeCoin(Game game, Player player, List<String> selectedColors) {
@@ -145,7 +145,7 @@ public class PlayerActionService {
     }
 
     /**
-        * Reserves a card and gives one gold coin if available.
+     * Reserves a card and gives one gold coin if available.
      */
     public boolean reserveCard(Game game, Player player, Card card) {
         if (player.getReservedCards().size() >= 3) {
@@ -171,11 +171,11 @@ public class PlayerActionService {
     }
 
     /**
-        * Checks whether one or more nobles can be claimed.
+     * Checks whether one or more nobles can be claimed.
      *
-    * @param game current game state
-    * @param player player being checked
-    * @param nobles nobles currently on the board
+     * @param game   current game state
+     * @param player player being checked
+     * @param nobles nobles currently on the board
      */
     public void checkNobles(Game game, Player player, List<Noble> nobles) {
         if (nobles == null)
@@ -207,11 +207,11 @@ public class PlayerActionService {
     }
 
     /**
-        * Discards one coin back to the bank.
+     * Discards one coin back to the bank.
      *
-    * @param game current game state
-    * @param player player discarding
-    * @param color color name
+     * @param game   current game state
+     * @param player player discarding
+     * @param color  color name
      * @return true if successful; false if the color is invalid or the player has
      *         none.
      */
@@ -233,7 +233,7 @@ public class PlayerActionService {
     }
 
     /**
-        * Checks if a player can pay for a card using coins and gold.
+     * Checks if a player can pay for a card using coins and gold.
      */
     public boolean canAfford(Player player, Card card) {
         int goldNeeded = 0;

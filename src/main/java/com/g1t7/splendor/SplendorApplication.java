@@ -16,8 +16,8 @@ public class SplendorApplication {
      *
      * @param args command-line arguments
      */
-	public static void main(String[] args) {
-		SpringApplication.run(SplendorApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(SplendorApplication.class, args);
+    }
 
 }
