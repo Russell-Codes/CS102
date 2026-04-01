@@ -104,10 +104,24 @@ public class LobbyController {
         return "redirect:/game/" + roomId;
     }
 
+    @PostMapping("/move-player")
+    public String movePlayer(@PathVariable String roomId,
+            @RequestParam String targetUuid,
+            @RequestParam String direction,
+            HttpSession session) {
+        String myUuid = (String) session.getAttribute("userUuid");
+
+        if (lobbyService.movePlayer(roomId, myUuid, targetUuid, direction)) {
+            refreshRoom(roomId);
+        }
+        return "redirect:/lobby/" + roomId;
+    }
+
     /**
      * Helper method to broadcast a websocket refresh command.
      */
     private void refreshRoom(String roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
     }
+
 }

@@ -41,22 +41,63 @@
         </h3>
         <ul class="space-y-3">
           <li
-            th:each="p : ${game.players}"
+            th:each="p, pStat : ${game.players}"
             class="flex justify-between items-center bg-gray-800 border border-gray-700 rounded-lg p-3 shadow-sm"
           >
-            <div>
-              <strong class="text-lg text-white" th:text="${p.name}"></strong>
-              <span
-                th:if="${p.uuid == game.hostUuid}"
-                class="ml-2 px-2 py-0.5 bg-yellow-900/50 text-yellow-500 text-xs rounded-full border border-yellow-700"
-                >Host</span
+            <div class="flex items-center gap-3">
+              <div
+                class="flex flex-col gap-1"
+                th:if="${myUuid == game.hostUuid}"
               >
-              <span
-                th:if="${p.ai}"
-                class="ml-2 px-2 py-0.5 bg-purple-900/50 text-purple-400 text-xs rounded-full border border-purple-700"
-                >CPU</span
-              >
+                <form
+                  th:action="@{|/lobby/${roomId}/move-player|}"
+                  method="post"
+                  class="m-0 leading-none"
+                >
+                  <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+                  <input type="hidden" name="direction" value="up" />
+                  <button
+                    type="submit"
+                    th:disabled="${pStat.first}"
+                    title="Move Up"
+                    class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-20 disabled:cursor-not-allowed rounded text-[10px] text-white transition-colors cursor-pointer"
+                  >
+                    ▲
+                  </button>
+                </form>
+                <form
+                  th:action="@{|/lobby/${roomId}/move-player|}"
+                  method="post"
+                  class="m-0 leading-none"
+                >
+                  <input type="hidden" name="targetUuid" th:value="${p.uuid}" />
+                  <input type="hidden" name="direction" value="down" />
+                  <button
+                    type="submit"
+                    th:disabled="${pStat.last}"
+                    title="Move Down"
+                    class="px-1.5 py-0.5 bg-gray-700 hover:bg-gray-600 disabled:opacity-20 disabled:cursor-not-allowed rounded text-[10px] text-white transition-colors cursor-pointer"
+                  >
+                    ▼
+                  </button>
+                </form>
+              </div>
+
+              <div>
+                <strong class="text-lg text-white" th:text="${p.name}"></strong>
+                <span
+                  th:if="${p.uuid == game.hostUuid}"
+                  class="ml-2 px-2 py-0.5 bg-yellow-900/50 text-yellow-500 text-xs rounded-full border border-yellow-700"
+                  >Host</span
+                >
+                <span
+                  th:if="${p.ai}"
+                  class="ml-2 px-2 py-0.5 bg-purple-900/50 text-purple-400 text-xs rounded-full border border-purple-700"
+                  >CPU</span
+                >
+              </div>
             </div>
+
             <div class="flex items-center gap-3">
               <span th:if="${p.ready}" class="text-green-500 font-bold text-sm"
                 >READY ✓</span
