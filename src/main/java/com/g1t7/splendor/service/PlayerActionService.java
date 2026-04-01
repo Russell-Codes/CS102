@@ -30,6 +30,11 @@ public class PlayerActionService {
      *         insufficient.
      */
     public boolean buyCard(Game game, Player player, Card card) {
+        if (!canAfford(player, card)) {
+            game.setMessage("Not enough coins to buy this card.");
+            return false;
+        }
+
         int[] bankCoins = game.getBankCoins();
         int[] effectiveCost = new int[Player.REGULAR_GEM_TYPES];
         int[] playerCards = player.getBonuses();
@@ -41,24 +46,13 @@ public class PlayerActionService {
             effectiveCost[i] = Math.max(0, card.getCost()[i] - playerCards[i]);
         }
 
-        // Calculate how much wildcard Gold is required to cover shortfalls
-        int goldNeeded = 0;
-        for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {
-            int shortfall = Math.max(0, effectiveCost[i] - playerCoins[i]);
-            goldNeeded += shortfall;
-        }
-
-        if (goldNeeded > playerCoins[goldIndex]) {
-            game.setMessage("Not enough coins to buy this card.");
-            return false;
-        }
-
         // Process the payment
         int goldSpent = 0;
         for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {
             int paid = Math.min(playerCoins[i], effectiveCost[i]);
             playerCoins[i] -= paid;
             bankCoins[i] += paid;
+
             int shortfall = effectiveCost[i] - paid;
             goldSpent += shortfall;
         }
@@ -71,7 +65,9 @@ public class PlayerActionService {
         playerCards[card.getGemColor().ordinal()]++;
         player.setScore(player.getScore() + card.getValue());
         card.setReserved(false);
+        
         checkNobles(game, player, game.getActiveNobles());
+
         return true;
     }
 
@@ -237,5 +233,15 @@ public class PlayerActionService {
         player.getCoins()[idx]--;
         game.getBankCoins()[idx]++;
         return true;
+    }
+
+    public boolean canAfford(Player player, Card card) {
+        int goldNeeded = 0;
+        for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {
+            int effectiveCost = Math.max(0, card.getCost()[i] - player.getBonuses()[i]);
+            int shortfall = Math.max(0, effectiveCost - player.getCoins()[i]);
+            goldNeeded += shortfall;
+        }
+        return goldNeeded <= player.getCoins()[GemColor.GOLD.ordinal()];
     }
 }

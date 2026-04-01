@@ -32,11 +32,10 @@ class GameLogicTests {
     void setUp() throws Exception {
         // Initialize our clean architecture services manually for testing
         playerActionService = new PlayerActionService();
-        gameEngineService = new GameEngineService();
         aiPlayerService = new AIPlayer(playerActionService);
+        gameEngineService = new GameEngineService(aiPlayerService);
 
-        // Inject the AIPlayer service into GameEngineService (resolving the Spring
-        // @Autowired)
+
         Field aiField = GameEngineService.class.getDeclaredField("aiPlayer");
         aiField.setAccessible(true);
         aiField.set(gameEngineService, aiPlayerService);

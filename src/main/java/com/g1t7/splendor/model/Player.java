@@ -1,6 +1,5 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,7 +7,7 @@ import java.util.List;
  * Represents a player in the Splendor game.
  * This is a pure data model (POJO) containing the player's state.
  */
-public class Player implements Serializable {
+public class Player {
 
     // --- CONSTANTS ---
     public static final int MAX_COIN_LIMIT = 10;
@@ -34,8 +33,6 @@ public class Player implements Serializable {
     private boolean isEjected = false;
     private long lastHeartbeat = System.currentTimeMillis();
 
-    public Player() {
-    }
 
     // FIXED: Removed the 'Game' object from the constructor to break the circular
     // dependency

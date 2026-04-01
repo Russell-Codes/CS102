@@ -5,7 +5,6 @@ import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.GemColor;
 import com.g1t7.splendor.model.Noble;
 import com.g1t7.splendor.model.Player;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,12 +13,15 @@ import java.util.List;
 @Service
 public class GamePlayService {
 
-    @Autowired
     private GameManager gameManager;
-    @Autowired
     private PlayerActionService playerActionService;
-    @Autowired
     private GameEngineService gameEngineService;
+
+    public GamePlayService(GameManager gameManager, PlayerActionService playerActionService, GameEngineService gameEngineService) {
+        this.gameManager = gameManager;
+        this.playerActionService = playerActionService;
+        this.gameEngineService = gameEngineService;
+    }
 
     public boolean takeCoins(String roomId, String userUuid, int[] counts) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);

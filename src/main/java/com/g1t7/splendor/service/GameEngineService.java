@@ -1,11 +1,9 @@
 package com.g1t7.splendor.service;
 
-import com.g1t7.splendor.config.GameConfig;
 import com.g1t7.splendor.model.*;
 import com.g1t7.splendor.util.CardData;
 import com.g1t7.splendor.util.NobleData;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,9 +12,12 @@ import java.util.List;
 
 @Service
 public class GameEngineService {
-
-    @Autowired
+    
     private AIPlayer aiPlayer;
+
+    public GameEngineService(AIPlayer aiPlayer) {
+        this.aiPlayer = aiPlayer;
+    }
 
     public void initializeGame(Game game) {
         int numPlayers = Math.max(game.getPlayers().size(), 2);
@@ -33,7 +34,7 @@ public class GameEngineService {
     }
 
     private void initDecks(Game game) {
-        List<Card> allCards = CardData.buildDeck(GameConfig.getCardFile());
+        List<Card> allCards = CardData.buildDeck(game.getConfig().getCardFile());
         for (Card c : allCards) {
             if (c.getTier() == 1)
                 game.getTier1Deck().add(c);
@@ -61,7 +62,7 @@ public class GameEngineService {
 
     private void initNobles(Game game, int numPlayers) {
         int nobleCount = game.getConfig().getNobleCount(numPlayers);
-        List<Noble> allNobles = NobleData.buildNobles(GameConfig.getNobleFile());
+        List<Noble> allNobles = NobleData.buildNobles(game.getConfig().getNobleFile());
         Collections.shuffle(allNobles);
         game.setActiveNobles(new ArrayList<>(allNobles.subList(0, Math.min(nobleCount, allNobles.size()))));
     }

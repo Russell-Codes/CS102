@@ -6,7 +6,6 @@ import com.g1t7.splendor.service.GameManager;
 import com.g1t7.splendor.service.LobbyService;
 
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,14 +15,15 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/lobby/{roomId}")
 public class LobbyController {
 
-    @Autowired
-    private GameManager gameManager;
+    private final GameManager gameManager;
+    private final LobbyService lobbyService;
+    private final SimpMessagingTemplate messagingTemplate;
 
-    @Autowired
-    private LobbyService lobbyService;
-
-    @Autowired
-    private SimpMessagingTemplate messagingTemplate;
+    public LobbyController(GameManager gameManager, LobbyService lobbyService, SimpMessagingTemplate messagingTemplate) {
+        this.gameManager = gameManager;
+        this.lobbyService = lobbyService;
+        this.messagingTemplate = messagingTemplate;
+    }
 
     @GetMapping
     public String showLobby(@PathVariable String roomId, Model model, HttpSession session) {

@@ -1,13 +1,11 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
-
 /**
  * Represents a Noble tile in the game.
  * Nobles visit players automatically when specific card bonus requirements are
  * met.
  */
-public class Noble implements Serializable {
+public class Noble {
 
     private int victoryPoints = 3;
 

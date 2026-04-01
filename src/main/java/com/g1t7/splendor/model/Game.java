@@ -1,13 +1,12 @@
 package com.g1t7.splendor.model;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
 import com.g1t7.splendor.config.GameConfig;
 
-public class Game implements Serializable {
+public class Game {
 
     // --- CONSTANTS ---
     public static final int VISIBLE_CARDS_PER_TIER = 4;

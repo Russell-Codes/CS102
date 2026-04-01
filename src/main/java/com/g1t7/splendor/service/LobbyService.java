@@ -2,7 +2,6 @@ package com.g1t7.splendor.service;
 
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.Player;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,11 +14,13 @@ import java.util.UUID;
 @Service
 public class LobbyService {
 
-    @Autowired
     private GameManager gameManager;
-
-    @Autowired
     private GameEngineService gameEngineService;
+
+    public LobbyService(GameManager gameManager, GameEngineService gameEngineService) {
+        this.gameManager = gameManager;
+        this.gameEngineService = gameEngineService;
+    }
 
     /**
      * Adds a human player to the lobby or updates their existing name, and sets

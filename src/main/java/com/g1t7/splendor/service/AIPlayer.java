@@ -4,8 +4,6 @@ import com.g1t7.splendor.model.Card;
 import com.g1t7.splendor.model.Game;
 import com.g1t7.splendor.model.GemColor;
 import com.g1t7.splendor.model.Player;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,8 +18,6 @@ public class AIPlayer {
 
     private final PlayerActionService actionService;
 
-    // REFACTORED: Removed GameEngineService injection to break circular dependency!
-    @Autowired
     public AIPlayer(PlayerActionService actionService) {
         this.actionService = actionService;
     }
@@ -42,7 +38,7 @@ public class AIPlayer {
         List<Card> visible = game.getVisibleCards();
         for (int i = 0; i < visible.size(); i++) {
             Card currentCard = visible.get(i);
-            if (currentCard != null && canAfford(player, currentCard)) {
+            if (currentCard != null && actionService.canAfford(player, currentCard)) {
                 if (bestCard == null || currentCard.getValue() > bestCard.getValue()) {
                     bestCard = currentCard;
                     bestSlot = i;
@@ -53,7 +49,7 @@ public class AIPlayer {
 
         for (int i = 0; i < player.getReservedCards().size(); i++) {
             Card currentCard = player.getReservedCards().get(i);
-            if (canAfford(player, currentCard)) {
+            if (actionService.canAfford(player, currentCard)) {
                 if (bestCard == null || currentCard.getValue() > bestCard.getValue()) {
                     bestCard = currentCard;
                     bestSlot = i;
@@ -75,16 +71,6 @@ public class AIPlayer {
             }
         }
         return isSuccessful;
-    }
-
-    private boolean canAfford(Player player, Card card) {
-        int goldNeeded = 0;
-        for (int i = 0; i < REGULAR_GEM_TYPES; i++) {
-            int effectiveCost = Math.max(0, card.getCost()[i] - player.getBonuses()[i]);
-            int shortfall = Math.max(0, effectiveCost - player.getCoins()[i]);
-            goldNeeded += shortfall;
-        }
-        return goldNeeded <= player.getCoins()[GemColor.GOLD.ordinal()];
     }
 
     private boolean tryReserveCard(Game game, Player player) {

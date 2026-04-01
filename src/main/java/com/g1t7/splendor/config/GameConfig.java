@@ -10,14 +10,14 @@ import java.util.Properties;
  * Reads game parameters from resources/config.properties.
  * Falls back to Splendor default values when a key or file is missing.
  */
-public class GameConfig implements Serializable {
+public class GameConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(GameConfig.class);
-    private static final String CONFIG_PATH = "game/config/config.properties";
+    private final String CONFIG_PATH = "game/config/config.properties";
 
     private int winScore = 15;
-    private static String cardFile = "game/config/cards.csv";
-    private static String nobleFile = "game/config/nobles.csv";
+    private String cardFile = "game/config/cards.csv";
+    private String nobleFile = "game/config/nobles.csv";
 
     // Gem counts by number of players (index 0 unused, 2–4 used)
     private int gems2Players = 4;
@@ -47,11 +47,11 @@ public class GameConfig implements Serializable {
                 logger.error("Error loading config from file: {}", CONFIG_PATH, e);
             }
         } else {
-            try (InputStream is = getClass().getClassLoader().getResourceAsStream(GameConfig.CONFIG_PATH)) {
+            try (InputStream is = getClass().getClassLoader().getResourceAsStream(this.CONFIG_PATH)) {
                 if (is != null)
                     props.load(is);
             } catch (IOException e) {
-                logger.error("Error loading config from classpath: {}", GameConfig.CONFIG_PATH, e);
+                logger.error("Error loading config from classpath: {}", this.CONFIG_PATH, e);
             }
         }
 
@@ -102,11 +102,11 @@ public class GameConfig implements Serializable {
         return winScore;
     }
 
-    public static String getCardFile() {
+    public String getCardFile() {
         return cardFile;
     }
 
-    public static String getNobleFile() {
+    public String getNobleFile() {
         return nobleFile;
     }
 

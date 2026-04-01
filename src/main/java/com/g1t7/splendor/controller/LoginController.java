@@ -5,7 +5,6 @@ import com.g1t7.splendor.service.GameManager;
 import com.g1t7.splendor.service.LobbyService;
 
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,11 +15,13 @@ import java.util.UUID;
 @Controller
 public class LoginController {
 
-    @Autowired
     private GameManager gameManager;
-
-    @Autowired
     private LobbyService lobbyService;
+
+    public LoginController(GameManager gameManager, LobbyService lobbyService) {
+        this.gameManager = gameManager;
+        this.lobbyService = lobbyService;
+    }
 
     // Helper to ensure every visitor has a unique ID
     private String ensureUuid(HttpSession session) {
