@@ -15,7 +15,8 @@ public class GameManager {
 
     private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     private final Map<String, Game> games = new ConcurrentHashMap<>();
-    private static final long ROOM_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+    private static final long ROOM_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    public static final int MAX_LOBBIES = 50;
 
     public String createGame(Game game) {
         String roomId = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
