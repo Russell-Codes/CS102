@@ -1,8 +1,7 @@
 package com.g1t7.splendor.model;
 
 /**
- * Represents a playable development card in the game.
- * Acts as a pure Data Transfer Object (POJO).
+ * One development card on the board or in a deck.
  */
 public class Card {
 
@@ -15,6 +14,9 @@ public class Card {
     private int[] cost = new int[Player.TOTAL_COIN_TYPES];
     private boolean reserved = false;
 
+    /**
+     * Creates a new development card.
+     */
     public Card(int tier, GemColor gemColor, int value, int[] cost) {
         this.tier = tier;
         this.gemColor = gemColor;

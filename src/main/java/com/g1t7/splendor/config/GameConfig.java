@@ -7,8 +7,10 @@ import java.io.*;
 import java.util.Properties;
 
 /**
- * Reads game parameters from resources/config.properties.
- * Falls back to Splendor default values when a key or file is missing.
+ * Loads game settings and data file paths.
+ *
+ * <p>It tries an external config file first, then the classpath copy,
+ * and finally falls back to defaults in this class.
  */
 public class GameConfig {
 
@@ -32,10 +34,16 @@ public class GameConfig {
     // Gold coins (always 5 in standard Splendor)
     private int goldCoins = 5;
 
+    /**
+        * Creates a config object and loads values immediately.
+     */
     public GameConfig() {
         load();
     }
 
+    /**
+        * Loads values from file/classpath and keeps defaults for anything missing or invalid.
+     */
     private void load() {
         Properties props = new Properties();
         File file = new File(CONFIG_PATH);
@@ -71,6 +79,14 @@ public class GameConfig {
                 nobles4Players);
     }
 
+    /**
+        * Reads an integer property, with fallback on missing/invalid values.
+     *
+     * @param props source properties map
+     * @param key configuration key to resolve
+     * @param defaultVal fallback value when key is missing or invalid
+    * @return parsed value or default
+     */
     private int getInt(Properties props, String key, int defaultVal) {
         String val = props.getProperty(key);
         if (val == null)
@@ -82,6 +98,12 @@ public class GameConfig {
         }
     }
 
+    /**
+        * Gets per-color gem count for the given player count.
+     *
+     * @param numPlayers current number of players
+    * @return gems per color in the bank
+     */
     public int getGemCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> gems3Players;
@@ -90,6 +112,12 @@ public class GameConfig {
         };
     }
 
+    /**
+        * Gets how many nobles should be in play for the player count.
+     *
+     * @param numPlayers current number of players
+     * @return number of nobles in play
+     */
     public int getNobleCount(int numPlayers) {
         return switch (numPlayers) {
             case 3 -> nobles3Players;

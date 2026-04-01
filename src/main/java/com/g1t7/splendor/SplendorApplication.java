@@ -5,19 +5,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * The monolithic execution root for the Splendor Spring Boot Application.
- * Bootstraps the embedded Apache Tomcat Servlet container, coordinates the 
- * internal component scan (finding Controllers and Services), and loads application contexts.
+ * Main entry point for the Splendor Spring Boot app.
  */
 @SpringBootApplication
 @EnableScheduling
 public class SplendorApplication {
 
     /**
-     * Standard Java execution entry point. 
-     * Passes execution context over to SpringApplication's lifecycle engine.
+     * Starts Spring Boot.
      *
-     * @param args Raw command-line arguments optionally injected during server startup.
+     * @param args command-line arguments
      */
 	public static void main(String[] args) {
 		SpringApplication.run(SplendorApplication.class, args);

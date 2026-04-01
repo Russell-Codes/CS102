@@ -11,8 +11,8 @@ import org.springframework.core.io.ClassPathResource;
 import com.g1t7.splendor.model.Noble;
 
 /**
- * Factory class that loads Noble tiles from an external CSV file.
- * Falls back to a standard hardcoded list if the CSV cannot be read.
+ * Loads noble tiles from CSV.
+ * Uses fallback nobles if the file cannot be read.
  */
 public class NobleData {
 
@@ -24,9 +24,9 @@ public class NobleData {
 
     /**
      * Builds the full list of Nobles from the configured CSV path.
-     * * @param csvPath The classpath location of the CSV file.
-     * 
-     * @return A list of initialized Noble objects.
+      *
+      * @param csvPath classpath location of the CSV file
+      * @return list of nobles
      */
     public static List<Noble> buildNobles(String csvPath) {
         List<Noble> nobles = new ArrayList<>();
@@ -70,6 +70,9 @@ public class NobleData {
         return nobles;
     }
     
+    /**
+     * Builds fallback nobles used when CSV loading fails.
+     */
     private static List<Noble> buildFallbackNobles() {
         List<Noble> nobles = new ArrayList<>();
         nobles.add(new Noble(4, 4, 0, 0, 0));

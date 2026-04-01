@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Handles player actions that happen during a turn.
+ */
 @Service
 public class GamePlayService {
 
@@ -17,12 +20,16 @@ public class GamePlayService {
     private PlayerActionService playerActionService;
     private GameEngineService gameEngineService;
 
-    public GamePlayService(GameManager gameManager, PlayerActionService playerActionService, GameEngineService gameEngineService) {
+    public GamePlayService(GameManager gameManager, PlayerActionService playerActionService,
+            GameEngineService gameEngineService) {
         this.gameManager = gameManager;
         this.playerActionService = playerActionService;
         this.gameEngineService = gameEngineService;
     }
 
+    /**
+     * Handles a coin-take request for the current player.
+     */
     public boolean takeCoins(String roomId, String userUuid, int[] counts) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -44,6 +51,9 @@ public class GamePlayService {
         return false;
     }
 
+    /**
+     * Handles a buy-card request.
+     */
     public boolean buyCard(String roomId, String userUuid, int cardIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -54,7 +64,6 @@ public class GamePlayService {
 
         if (card != null && playerActionService.buyCard(game, current, card)) {
             if (cardIndex >= 0) {
-                // REFACTORED: Let the Engine Sweeper handle it!
                 game.getVisibleCards().set(cardIndex, null);
             } else {
                 current.getReservedCards().remove(card);
@@ -68,6 +77,9 @@ public class GamePlayService {
         return false;
     }
 
+    /**
+     * Handles noble selection when multiple nobles are available.
+     */
     public boolean claimNoble(String roomId, String userUuid, int nobleIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || !game.isPendingNobleChoice())
@@ -90,6 +102,9 @@ public class GamePlayService {
         return false;
     }
 
+    /**
+     * Handles a reserve-card request.
+     */
     public boolean reserveCard(String roomId, String userUuid, int cardIndex) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -100,7 +115,6 @@ public class GamePlayService {
             Card card = game.getVisibleCards().get(cardIndex);
 
             if (card != null && playerActionService.reserveCard(game, current, card)) {
-                // REFACTORED: Let the Engine Sweeper handle it!
                 game.getVisibleCards().set(cardIndex, null);
 
                 if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
@@ -114,6 +128,9 @@ public class GamePlayService {
         return false;
     }
 
+    /**
+     * Handles a single discard while the player is over the coin limit.
+     */
     public boolean discardCoins(String roomId, String userUuid, String color) {
         Game game = fetchActiveGameAndValidateTurn(roomId, userUuid);
         if (game == null || !game.isPendingDiscard() || game.isPendingNobleChoice())
@@ -141,7 +158,7 @@ public class GamePlayService {
         return game;
     }
 
-    // REFACTORED: Using the enum directly
+    // Build a flat list of color names from incoming counts.
     private List<String> buildColorList(int[] counts) {
         List<String> list = new ArrayList<>();
         for (int i = 0; i < counts.length; i++) {

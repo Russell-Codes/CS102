@@ -6,16 +6,31 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+/**
+ * WebSocket/STOMP setup for real-time room updates.
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    /**
+        * Sets broker paths used by clients.
+     *
+     * @param config Spring message broker registry
+     */
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic"); // For broadcasting to clients
         config.setApplicationDestinationPrefixes("/app"); // For client-to-server messages
     }
 
+    /**
+        * Registers the handshake endpoint.
+        *
+        * <p>SockJS is enabled as a fallback.
+     *
+     * @param registry Spring STOMP endpoint registry
+     */
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/splendor-websocket")

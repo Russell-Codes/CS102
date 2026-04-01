@@ -6,6 +6,9 @@ import java.util.List;
 
 import com.g1t7.splendor.config.GameConfig;
 
+/**
+ * Holds the full state of one Splendor game.
+ */
 public class Game {
 
     // --- CONSTANTS ---
@@ -40,10 +43,16 @@ public class Game {
         config = new GameConfig();
     }
 
+    /**
+        * @return player whose turn it is
+     */
     public Player getCurrentPlayer() {
         return players.get(currentTurnIndex);
     }
 
+    /**
+        * @return true when the game has ended
+     */
     public boolean isGameOver() {
         return gameOver;
     }
@@ -52,6 +61,9 @@ public class Game {
         this.gameOver = gameOver;
     }
 
+    /**
+        * Picks a winner by score, then by fewer bought cards on ties.
+     */
     public Player getWinner() {
         return players.stream()
                 .max(Comparator.comparingInt(Player::getScore)
@@ -59,15 +71,24 @@ public class Game {
                 .orElse(players.get(0));
     }
 
+    /**
+        * Converts a gem index to a lowercase name for the UI.
+     */
     public String gemColorName(int i) {
         return GemColor.fromIndex(i).name().toLowerCase();
     }
 
+    /**
+        * Returns the four visible cards for one tier.
+     */
     public List<Card> getVisibleCardsForTier(int tier) {
         int start = (tier - 1) * VISIBLE_CARDS_PER_TIER;
         return visibleCards.subList(start, start + VISIBLE_CARDS_PER_TIER);
     }
 
+    /**
+        * Returns remaining deck size for a tier.
+     */
     public int getDeckSize(int tier) {
         if (tier == 1)
             return tier1Deck.size();
@@ -76,6 +97,9 @@ public class Game {
         return tier3Deck.size();
     }
 
+    /**
+        * @return score that triggers the endgame
+     */
     public int getWinScore() {
         return config.getWinScore();
     }

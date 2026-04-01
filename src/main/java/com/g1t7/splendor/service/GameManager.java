@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Keeps active game rooms in memory.
+ */
 @Service
 public class GameManager {
 
@@ -18,6 +21,11 @@ public class GameManager {
     private static final long ROOM_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
     public static final int MAX_LOBBIES = 67;
 
+    /**
+        * Creates a room if the lobby limit has not been reached.
+     *
+     * @return generated room ID, or null when lobby limit is reached
+     */
     public String createGame(Game game) {
         // Enforce the lobby limit
         if (games.size() >= MAX_LOBBIES) {
@@ -32,12 +40,18 @@ public class GameManager {
         return roomId;
     }
 
+    /**
+        * Finds a room by ID (case-insensitive).
+     */
     public Game getGame(String roomId) {
         if (roomId == null)
             return null;
         return games.get(roomId.toUpperCase());
     }
 
+    /**
+        * Periodically removes rooms that have been idle too long.
+     */
     @Scheduled(fixedRate = 1800000)
     public void cleanupIdleRooms() {
         long now = System.currentTimeMillis();

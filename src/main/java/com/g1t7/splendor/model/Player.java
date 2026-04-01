@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a player in the Splendor game.
- * This is a pure data model (POJO) containing the player's state.
+ * Stores one player's game state.
  */
 public class Player {
 
@@ -19,7 +18,7 @@ public class Player {
     private String name;
     private int score;
 
-    // Clean Code: Renamed from 'myCoins' and 'myCards'
+    // Coin counts and permanent card bonuses.
     private int[] coins = new int[TOTAL_COIN_TYPES];
     private int[] bonuses = new int[REGULAR_GEM_TYPES];
 
@@ -33,19 +32,23 @@ public class Player {
     private boolean isEjected = false;
     private long lastHeartbeat = System.currentTimeMillis();
 
-    // FIXED: Removed the 'Game' object from the constructor to break the circular
-    // dependency
+    /**
+     * Creates a human player with the given display name.
+     */
     public Player(String name) {
         this.name = name;
     }
 
+    /**
+     * Creates a player and sets whether it is AI-controlled.
+     */
     public Player(String name, boolean ai) {
         this.name = name;
         this.ai = ai;
     }
 
     /**
-     * Checks if a human player has timed out due to inactivity.
+     * Checks whether a human player timed out due to inactivity.
      * 
      * @return true if the player has disconnected, false otherwise.
      */
@@ -56,7 +59,7 @@ public class Player {
     }
 
     /**
-     * Calculates the total number of coins currently held by the player.
+     * Counts all coins currently held by the player.
      * 
      * @return the total coin count.
      */
@@ -92,7 +95,6 @@ public class Player {
         this.score = score;
     }
 
-    // FIXED: Renamed Getters/Setters
     public int[] getCoins() {
         return coins;
     }

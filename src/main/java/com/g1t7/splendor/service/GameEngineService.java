@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Runs setup and turn flow for an active game.
+ */
 @Service
 public class GameEngineService {
 
@@ -19,6 +22,9 @@ public class GameEngineService {
         this.aiPlayer = aiPlayer;
     }
 
+    /**
+        * Sets up bank, decks, board, and nobles for a new game.
+     */
     public void initializeGame(Game game) {
         int numPlayers = Math.max(game.getPlayers().size(), 2);
         initBank(game, numPlayers);
@@ -90,6 +96,9 @@ public class GameEngineService {
         return game.getTier3Deck();
     }
 
+    /**
+        * Refills one board slot from the matching tier deck.
+     */
     public void replenishCard(Game game, int slotIndex) {
         List<Card> deck = deckForSlot(game, slotIndex);
         if (!deck.isEmpty()) {
@@ -99,6 +108,9 @@ public class GameEngineService {
         }
     }
 
+    /**
+        * Moves to the next active player and handles endgame checks.
+     */
     public void changeTurns(Game game) {
         autoReplenishBoard(game);
         game.setLastActivityTime(System.currentTimeMillis());
@@ -132,6 +144,9 @@ public class GameEngineService {
         }
     }
 
+    /**
+        * Host action: turn a player into AI.
+     */
     public boolean replacePlayerWithAi(Game game, String hostUuid, String targetUuid) {
         if (!game.getHostUuid().equals(hostUuid))
             return false;
@@ -150,6 +165,9 @@ public class GameEngineService {
         return false;
     }
 
+    /**
+        * Host action: eject a player and return their coins/cards.
+     */
     public boolean ejectPlayer(Game game, String hostUuid, String targetUuid) {
         if (!game.getHostUuid().equals(hostUuid))
             return false;

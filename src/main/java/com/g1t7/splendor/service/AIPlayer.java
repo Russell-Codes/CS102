@@ -12,6 +12,7 @@ import java.util.List;
 @Service
 public class AIPlayer {
 
+    // Short aliases for shared constants.
     private static final int MAX_COIN_LIMIT = Player.MAX_COIN_LIMIT;
     private static final int REGULAR_GEM_TYPES = Player.REGULAR_GEM_TYPES;
     private static final int TOTAL_COIN_TYPES = Player.TOTAL_COIN_TYPES;
@@ -22,6 +23,11 @@ public class AIPlayer {
         this.actionService = actionService;
     }
 
+    /**
+     * Takes one AI turn.
+     *
+     * @return true if the AI made a move
+     */
     public boolean takeTurn(Game game, Player player) {
         if (tryBuyBestCard(game, player))
             return true;
@@ -32,28 +38,20 @@ public class AIPlayer {
 
     private boolean tryBuyBestCard(Game game, Player player) {
         Card bestCard = null;
-        int bestSlot = -1;
-        boolean fromReserve = false;
 
         List<Card> visible = game.getVisibleCards();
-        for (int i = 0; i < visible.size(); i++) {
-            Card currentCard = visible.get(i);
+        for (Card currentCard : visible) {
             if (currentCard != null && actionService.canAfford(player, currentCard)) {
                 if (bestCard == null || currentCard.getValue() > bestCard.getValue()) {
                     bestCard = currentCard;
-                    bestSlot = i;
-                    fromReserve = false;
                 }
             }
         }
 
-        for (int i = 0; i < player.getReservedCards().size(); i++) {
-            Card currentCard = player.getReservedCards().get(i);
+        for (Card currentCard : player.getReservedCards()) {
             if (actionService.canAfford(player, currentCard)) {
                 if (bestCard == null || currentCard.getValue() > bestCard.getValue()) {
                     bestCard = currentCard;
-                    bestSlot = i;
-                    fromReserve = true;
                 }
             }
         }
@@ -61,16 +59,8 @@ public class AIPlayer {
         if (bestCard == null)
             return false;
 
-        boolean isSuccessful = actionService.buyCard(game, player, bestCard);
-        if (isSuccessful) {
-            if (fromReserve) {
-                player.getReservedCards().remove(bestCard);
-            } else {
-                // REFACTORED: Nullify slot for the Sweeper
-                game.getVisibleCards().set(bestSlot, null);
-            }
-        }
-        return isSuccessful;
+        // PlayerActionService handles board/reserve cleanup.
+        return actionService.buyCard(game, player, bestCard);
     }
 
     private boolean tryReserveCard(Game game, Player player) {
@@ -78,15 +68,12 @@ public class AIPlayer {
             return false;
 
         Card bestCard = null;
-        int bestSlot = -1;
 
         List<Card> visible = game.getVisibleCards();
-        for (int i = 0; i < visible.size(); i++) {
-            Card currentCard = visible.get(i);
+        for (Card currentCard : visible) {
             if (currentCard != null && currentCard.getValue() >= 2) {
                 if (bestCard == null || currentCard.getValue() > bestCard.getValue()) {
                     bestCard = currentCard;
-                    bestSlot = i;
                 }
             }
         }
@@ -94,11 +81,9 @@ public class AIPlayer {
         if (bestCard == null)
             return false;
 
+        // PlayerActionService handles board cleanup.
         boolean isSuccessful = actionService.reserveCard(game, player, bestCard);
         if (isSuccessful) {
-            // REFACTORED: Nullify slot for the Sweeper
-            game.getVisibleCards().set(bestSlot, null);
-
             while (player.getTotalCoins() > MAX_COIN_LIMIT) {
                 autoDiscard(game, player);
             }
@@ -162,8 +147,13 @@ public class AIPlayer {
             }
         }
 
-        if (selection.isEmpty())
+        if (selection.isEmpty()) {
+            // If no coin move is possible, drop one coin to avoid stalling.
+            if (player.getTotalCoins() > 0) {
+                autoDiscard(game, player);
+            }
             return true;
+        }
 
         return actionService.exchangeCoin(game, player, selection);
     }

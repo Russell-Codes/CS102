@@ -11,6 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Handles lobby actions before the game starts.
+ */
 @Controller
 @RequestMapping("/lobby/{roomId}")
 public class LobbyController {
@@ -25,6 +28,9 @@ public class LobbyController {
         this.messagingTemplate = messagingTemplate;
     }
 
+    /**
+        * Shows the lobby page if access checks pass.
+     */
     @GetMapping
     public String showLobby(@PathVariable String roomId, Model model, HttpSession session) {
         Game game = gameManager.getGame(roomId);
@@ -34,7 +40,7 @@ public class LobbyController {
         String myUuid = (String) session.getAttribute("userUuid");
         Player me = lobbyService.getPlayerByUuid(game, myUuid);
 
-        // Direct URL Hacking Bouncer
+        // Prevent joining by URL if the room is already full or started.
         if (me == null && game.getPlayers().size() >= game.getCapacity()) {
             return "redirect:/?error=full";
         }
@@ -57,12 +63,15 @@ public class LobbyController {
         return "lobby";
     }
 
+    /**
+        * Join/update player info and mark the player as ready.
+     */
     @PostMapping("/ready")
     public String setReady(@PathVariable String roomId, @RequestParam String playerName, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
         Game game = gameManager.getGame(roomId);
 
-        // Fail fast if attempting to join a full room via direct POST
+        // Block direct POST joins when room is already full.
         if (game != null && lobbyService.getPlayerByUuid(game, myUuid) == null
                 && game.getPlayers().size() >= game.getCapacity()) {
             return "redirect:/lobby/" + roomId + "?error=full";
@@ -74,6 +83,9 @@ public class LobbyController {
         return "redirect:/lobby/" + roomId;
     }
 
+    /**
+        * Host action: add an AI player.
+     */
     @PostMapping("/add-ai")
     public String addAi(@PathVariable String roomId, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
@@ -84,6 +96,9 @@ public class LobbyController {
         return "redirect:/lobby/" + roomId;
     }
 
+    /**
+        * Host action: remove an AI player.
+     */
     @PostMapping("/remove-ai")
     public String removeAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
@@ -94,6 +109,9 @@ public class LobbyController {
         return "redirect:/lobby/" + roomId;
     }
 
+    /**
+        * Host action: start the game.
+     */
     @PostMapping("/start")
     public String startGame(@PathVariable String roomId, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
@@ -104,6 +122,9 @@ public class LobbyController {
         return "redirect:/game/" + roomId;
     }
 
+    /**
+        * Host action: move a player up or down before the game starts.
+     */
     @PostMapping("/move-player")
     public String movePlayer(@PathVariable String roomId,
             @RequestParam String targetUuid,
@@ -118,7 +139,7 @@ public class LobbyController {
     }
 
     /**
-     * Helper method to broadcast a websocket refresh command.
+     * Sends a refresh event to all clients in the room.
      */
     private void refreshRoom(String roomId) {
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");

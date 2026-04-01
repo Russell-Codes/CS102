@@ -11,23 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Service responsible for executing core player actions.
- * Handles the logic for buying cards, exchanging coins, reserving cards,
- * and checking for noble visits.
+ * Runs core player actions like buying cards, taking coins, and reserving.
  */
 @Service
 public class PlayerActionService {
 
     /**
-     * Attempts to purchase a card for a player.
-     * Calculates the effective cost (discounted by the player's current cards)
-     * and automatically applies Gold wildcard coins if needed.
-     *
-     * @param game   The current game state.
-     * @param player The player attempting the purchase.
-     * @param card   The card being purchased.
-     * @return true if the transaction was successful; false if funds are
-     *         insufficient.
+        * Buys a card for a player if they can afford it.
      */
     public boolean buyCard(Game game, Player player, Card card) {
         if (!canAfford(player, card)) {
@@ -64,21 +54,29 @@ public class PlayerActionService {
         player.getCards().add(card);
         playerCards[card.getGemColor().ordinal()]++;
         player.setScore(player.getScore() + card.getValue());
-        card.setReserved(false);
-        
+
+        // Remove the card from wherever it came from.
+        if (card.isReserved()) {
+            player.getReservedCards().remove(card);
+            card.setReserved(false);
+        } else {
+            int index = game.getVisibleCards().indexOf(card);
+            if (index != -1) {
+                game.getVisibleCards().set(index, null);
+            }
+        }
+
         checkNobles(game, player, game.getActiveNobles());
 
         return true;
     }
 
     /**
-     * Validates and processes a player's request to take gems from the bank.
-     * Enforces the rules: Take 3 distinct colors, OR take 2 of the same color
-     * (only if the bank has at least 4 of that color).
+        * Validates and applies a coin-take action.
      *
-     * @param game           The current game state.
-     * @param player         The player taking the coins.
-     * @param selectedColors List of string representations of the chosen colors.
+    * @param game current game state
+    * @param player current player
+    * @param selectedColors chosen colors
      * @return true if the exchange is legal and processed; false otherwise.
      */
     public boolean exchangeCoin(Game game, Player player, List<String> selectedColors) {
@@ -107,7 +105,7 @@ public class PlayerActionService {
             toTake[gemColor.ordinal()]++;
         }
 
-        // Validate the specific Splendor taking rules
+        // Splendor take rules
         if (selectedColors.size() == 2) {
             int distinctCount = 0;
             int sameColorIdx = -1;
@@ -147,13 +145,7 @@ public class PlayerActionService {
     }
 
     /**
-     * Reserves a card for the player and grants them 1 Gold wildcard (if
-     * available).
-     *
-     * @param game   The current game state.
-     * @param player The player reserving the card.
-     * @param card   The card to be reserved.
-     * @return true if successful; false if the player already has 3 reserved cards.
+        * Reserves a card and gives one gold coin if available.
      */
     public boolean reserveCard(Game game, Player player, Card card) {
         if (player.getReservedCards().size() >= 3) {
@@ -164,6 +156,12 @@ public class PlayerActionService {
         card.setReserved(true);
         player.getReservedCards().add(card);
 
+        // Remove the reserved card from the board if it is visible.
+        int index = game.getVisibleCards().indexOf(card);
+        if (index != -1) {
+            game.getVisibleCards().set(index, null);
+        }
+
         int goldIndex = GemColor.GOLD.ordinal();
         if (game.getBankCoins()[goldIndex] > 0) {
             player.getCoins()[goldIndex]++;
@@ -173,12 +171,11 @@ public class PlayerActionService {
     }
 
     /**
-     * Evaluates if a player has met the requirements to be visited by any Nobles.
-     * If multiple are satisfied, flags the game state to await the player's choice.
+        * Checks whether one or more nobles can be claimed.
      *
-     * @param game   The current game state.
-     * @param player The player being evaluated.
-     * @param nobles The list of currently available nobles on the board.
+    * @param game current game state
+    * @param player player being checked
+    * @param nobles nobles currently on the board
      */
     public void checkNobles(Game game, Player player, List<Noble> nobles) {
         if (nobles == null)
@@ -197,12 +194,12 @@ public class PlayerActionService {
             nobles.remove(satisfied.get(0));
         } else if (satisfied.size() > 1) {
             if (player.isAi()) {
-                // AI automatically takes the first satisfied noble
+                // AI picks the first available noble.
                 player.setScore(player.getScore() + satisfied.get(0).getVictoryPoints());
                 player.getObtainedNobles().add(satisfied.get(0));
                 nobles.remove(satisfied.get(0));
             } else {
-                // Human player must choose
+                // Human player chooses on the next step.
                 game.setPendingNobleChoice(true);
                 game.setPendingNobles(satisfied);
             }
@@ -210,11 +207,11 @@ public class PlayerActionService {
     }
 
     /**
-     * Discards a single coin from the player's inventory back to the bank.
+        * Discards one coin back to the bank.
      *
-     * @param game   The current game state.
-     * @param player The player discarding the coin.
-     * @param color  The string representation of the color being discarded.
+    * @param game current game state
+    * @param player player discarding
+    * @param color color name
      * @return true if successful; false if the color is invalid or the player has
      *         none.
      */
@@ -235,6 +232,9 @@ public class PlayerActionService {
         return true;
     }
 
+    /**
+        * Checks if a player can pay for a card using coins and gold.
+     */
     public boolean canAfford(Player player, Card card) {
         int goldNeeded = 0;
         for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
- * Controller responsible for handling the end-of-game state and routing.
+ * Handles the game-over page and restart flow.
  */
 @Controller
 @RequestMapping("/gameover")
@@ -25,14 +25,11 @@ public class GameOverController {
     }
 
     /**
-     * Renders the game over terminal state view.
-     * Retrieves the game from the GameManager and injects the winner into the
-     * model.
+        * Shows the game-over screen for a room.
      *
-     * @param roomId The ID of the room that has finished.
-     * @param model  The structural model used to inject the 'winner' and 'game'
-     *               objects into the View.
-     * @return The String identifier representing the `gameover` Thymeleaf template.
+        * @param roomId finished room ID
+        * @param model page model
+        * @return game-over template, or redirect to home if room is missing
      */
     @GetMapping("/{roomId}")
     public String showGameOver(@PathVariable String roomId, Model model) {
@@ -48,14 +45,10 @@ public class GameOverController {
     }
 
     /**
-     * Reinitializes the user's session state.
-     * Forcefully destroys the HttpSession, forcing the user into a clean login
-     * flow.
-     * The GameManager will automatically garbage collect the orphaned Game room
-     * after it idles out.
+        * Resets the session and sends the player back to home.
      *
-     * @param session The targeted HTTP Session to be invalidated.
-     * @return A redirect mapping directly to the application root.
+        * @param session current HTTP session
+        * @return redirect to home
      */
     @PostMapping("/restart")
     public String restart(HttpSession session) {
