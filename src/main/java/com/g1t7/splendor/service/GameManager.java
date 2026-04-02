@@ -20,7 +20,7 @@ public class GameManager {
     private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     private final Map<String, Game> games = new ConcurrentHashMap<>();
     private static final long ROOM_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
-    private static final long INACTIVITY_THRESHOLD_MS = 60000; // 3 minutes
+    private static final long INACTIVITY_THRESHOLD_MS = 180000; // 3 minutes
     private static final long INACTIVITY_WINDOW_MS = 30000; // Exactly matches the sweep rate
     private static final int MAX_LOBBIES = 67;
 
