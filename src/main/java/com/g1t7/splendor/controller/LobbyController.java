@@ -34,24 +34,30 @@ public class LobbyController {
      */
     @GetMapping
     public String showLobby(@PathVariable String roomId, Model model, HttpSession session) {
+        // Look up the room
         Game game = gameManager.getGame(roomId);
         if (game == null)
             return "redirect:/?error=notfound";
 
+        // Get current player's UUID from session
         String myUuid = (String) session.getAttribute("userUuid");
+        // Check if this player is already in the room
         Player me = lobbyService.getPlayerByUuid(game, myUuid);
 
         // Prevent joining by URL if the room is already full or started.
         if (me == null && game.getPlayers().size() >= game.getCapacity()) {
             return "redirect:/?error=full";
         }
+        // Prevent joining a game that's already in progress
         if (me == null && game.isStarted()) {
             return "redirect:/?error=started";
         }
 
+        // If game has started, show game page instead of lobby
         if (game.isStarted())
             return "redirect:/game/" + roomId;
 
+        // Check if all players are ready: room is full AND all players marked as ready
         boolean allReady = game.getPlayers().size() == game.getCapacity() &&
                 game.getPlayers().stream().allMatch(Player::isReady);
 
@@ -78,6 +84,7 @@ public class LobbyController {
             return "redirect:/lobby/" + roomId + "?error=full";
         }
 
+        // Add or update player in the room and mark as ready
         if (lobbyService.joinOrUpdatePlayer(roomId, myUuid, playerName)) {
             refreshRoom(roomId);
         }
@@ -91,6 +98,7 @@ public class LobbyController {
     public String addAi(@PathVariable String roomId, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
 
+        // Attempt to add AI player (fails if not host or room full)
         if (lobbyService.addAi(roomId, myUuid)) {
             refreshRoom(roomId);
         }
@@ -104,6 +112,7 @@ public class LobbyController {
     public String removeAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
 
+        // Attempt to remove AI player by UUID (fails if not host or not an AI)
         if (lobbyService.removeAi(roomId, myUuid, targetUuid)) {
             refreshRoom(roomId);
         }
@@ -117,6 +126,7 @@ public class LobbyController {
     public String startGame(@PathVariable String roomId, HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
 
+        // Attempt to start game (fails if not host, room not full, or not all ready)
         if (lobbyService.startGame(roomId, myUuid)) {
             refreshRoom(roomId);
         }
@@ -133,6 +143,8 @@ public class LobbyController {
             HttpSession session) {
         String myUuid = (String) session.getAttribute("userUuid");
 
+        // Attempt to move player (fails if not host, game started, or invalid
+        // direction)
         if (lobbyService.movePlayer(roomId, myUuid, targetUuid, direction)) {
             refreshRoom(roomId);
         }
@@ -143,6 +155,7 @@ public class LobbyController {
      * Sends a refresh event to all clients in the room.
      */
     private void refreshRoom(String roomId) {
+        // Broadcast REFRESH message to all WebSocket subscribers on this room's topic
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
     }
 

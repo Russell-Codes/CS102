@@ -33,6 +33,7 @@ public class GameOverController {
      */
     @GetMapping("/{roomId}")
     public String showGameOver(@PathVariable String roomId, Model model) {
+        // Look up the finished game
         Game game = gameManager.getGame(roomId);
 
         if (game == null) {
@@ -52,6 +53,7 @@ public class GameOverController {
      */
     @PostMapping("/restart")
     public String restart(HttpSession session) {
+        // Invalidate the session to clear all player/room state
         session.invalidate();
         return "redirect:/";
     }

@@ -31,6 +31,7 @@ cd ./CS102
 ```
 
 ### 2. Build the Frontend (Tailwind CSS)
+#### [IF YOU HAVE NODE.JS, AND NPM INSTALLED ALREADY, ELSE SKIP TO STEP 3]
 Navigate to the frontend directory to install dependencies and compile the CSS.
 ```bash
 cd src/main/frontend

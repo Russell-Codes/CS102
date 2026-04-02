@@ -33,6 +33,7 @@ public class LoginController {
     private String ensureUuid(HttpSession session) {
         String uuid = (String) session.getAttribute("userUuid");
         if (uuid == null) {
+            // Generate new UUID for this session and store in session attributes
             uuid = UUID.randomUUID().toString();
             session.setAttribute("userUuid", uuid);
         }
@@ -44,6 +45,7 @@ public class LoginController {
      */
     @GetMapping("/")
     public String showLogin(HttpSession session) {
+        // Ensure this session has a unique player UUID before proceeding
         ensureUuid(session);
         return "login";
     }
@@ -71,18 +73,22 @@ public class LoginController {
     @GetMapping("/join")
     public String joinLobby(@RequestParam String roomId, HttpSession session) {
         String myUuid = ensureUuid(session);
+        // Look up the room
         Game game = gameManager.getGame(roomId);
 
         if (game == null)
             return "redirect:/?error=notfound";
 
+        // Check if this player is already in the room
         boolean alreadyInRoom = game.getPlayers().stream()
                 .anyMatch(p -> p.getUuid() != null && p.getUuid().equals(myUuid));
 
+        // Reject if room is full and player is not already in it
         if (!alreadyInRoom && game.getPlayers().size() >= game.getCapacity()) {
             return "redirect:/?error=full";
         }
 
+        // Reject if game has already started and player is not already in it
         if (!alreadyInRoom && game.isStarted()) {
             return "redirect:/?error=started";
         }

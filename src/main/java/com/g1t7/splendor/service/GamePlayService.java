@@ -42,6 +42,7 @@ public class GamePlayService {
         Player current = game.getCurrentPlayer();
         if (playerActionService.exchangeCoin(game, current, selectedColors)) {
             if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
+                // Enter pending discard phase if over limit
                 game.setPendingDiscard(true);
             } else {
                 gameEngineService.changeTurns(game);
@@ -60,9 +61,14 @@ public class GamePlayService {
             return false;
 
         Player current = game.getCurrentPlayer();
+        // Resolve card index: positive for visible board, negative encoding for
+        // reserved
         Card card = resolveCard(game, current, cardIndex);
 
+        // Execute purchase: check affordability, pay coins, grant card+bonus+VP, check
+        // nobles
         if (card != null && playerActionService.buyCard(game, current, card)) {
+            // If player didn't trigger a multiple-noble-choice phase, proceed to next turn
             if (!game.isPendingNobleChoice()) {
                 gameEngineService.changeTurns(game);
             }
@@ -79,13 +85,16 @@ public class GamePlayService {
         if (game == null || !game.isPendingNobleChoice())
             return false;
 
+        // Validate index and retrieve chosen noble from pending list
         if (nobleIndex >= 0 && nobleIndex < game.getPendingNobles().size()) {
             Player current = game.getCurrentPlayer();
             Noble chosen = game.getPendingNobles().get(nobleIndex);
 
+            // Award noble: grant VP, add to player collection
             current.setScore(current.getScore() + chosen.getVictoryPoints());
             current.getObtainedNobles().add(chosen);
 
+            // Remove from board and clear pending choice state
             game.getActiveNobles().remove(chosen);
             game.setPendingNobleChoice(false);
             game.getPendingNobles().clear();
@@ -108,8 +117,12 @@ public class GamePlayService {
             Player current = game.getCurrentPlayer();
             Card card = game.getVisibleCards().get(cardIndex);
 
+            // Execute reserve: mark card as reserved, add gold if available, remove from
+            // board
             if (card != null && playerActionService.reserveCard(game, current, card)) {
+                // After receiving gold token, check if player exceeded 10-coin limit
                 if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
+                    // Enter pending discard phase if over limit
                     game.setPendingDiscard(true);
                 } else {
                     gameEngineService.changeTurns(game);
@@ -221,6 +234,7 @@ public class GamePlayService {
             // Check if player exceeded the 10-coin limit because of the newly acquired Gold
             // token
             if (current.getTotalCoins() > Player.MAX_COIN_LIMIT) {
+                // Enter pending discard phase if over limit
                 game.setPendingDiscard(true);
             } else {
                 gameEngineService.changeTurns(game);

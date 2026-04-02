@@ -20,6 +20,7 @@ public class PlayerActionService {
      * Buys a card for a player if they can afford it.
      */
     public boolean buyCard(Game game, Player player, Card card) {
+        // Verify player can afford card using coins + bonuses + gold as payment
         if (!canAfford(player, card)) {
             game.setMessage("Not enough coins to buy this card.");
             return false;
@@ -80,6 +81,7 @@ public class PlayerActionService {
      * @return true if the exchange is legal and processed; false otherwise.
      */
     public boolean exchangeCoin(Game game, Player player, List<String> selectedColors) {
+        // Splendor coin rules: either 3 distinct colors or 2 of the same color
         if (selectedColors == null || selectedColors.size() < 2 || selectedColors.size() > 3) {
             game.setMessage("You must take exactly 3 distinct coins or 2 of the same color.");
             return false;
@@ -148,11 +150,13 @@ public class PlayerActionService {
      * Reserves a card and gives one gold coin if available.
      */
     public boolean reserveCard(Game game, Player player, Card card) {
+        // Enforce reserve limit of 3 cards per player
         if (player.getReservedCards().size() >= 3) {
             game.setMessage("You can only reserve up to 3 cards.");
             return false;
         }
 
+        // Add card to player's reserve and mark as reserved
         card.setReserved(true);
         player.getReservedCards().add(card);
 
@@ -162,6 +166,7 @@ public class PlayerActionService {
             game.getVisibleCards().set(index, null);
         }
 
+        // Award one gold token to player if available in bank
         int goldIndex = GemColor.GOLD.ordinal();
         if (game.getBankCoins()[goldIndex] > 0) {
             player.getCoins()[goldIndex]++;
@@ -181,6 +186,7 @@ public class PlayerActionService {
         if (nobles == null)
             return;
 
+        // Identify which nobles are now satisfied based on player's card bonuses
         List<Noble> satisfied = new ArrayList<>();
         for (Noble noble : nobles) {
             if (noble.isSatisfiedBy(player.getBonuses())) {
@@ -188,6 +194,7 @@ public class PlayerActionService {
             }
         }
 
+        // Single noble: auto-claim (award victory points and remove from board)
         if (satisfied.size() == 1) {
             player.setScore(player.getScore() + satisfied.get(0).getVictoryPoints());
             player.getObtainedNobles().add(satisfied.get(0));
@@ -227,6 +234,7 @@ public class PlayerActionService {
         if (player.getCoins()[idx] <= 0)
             return false;
 
+        // Execute the return: decrement player's coin, increment bank's coin
         player.getCoins()[idx]--;
         game.getBankCoins()[idx]++;
         return true;
@@ -237,11 +245,16 @@ public class PlayerActionService {
      */
     public boolean canAfford(Player player, Card card) {
         int goldNeeded = 0;
+        // Calculate gold deficit per color (cost after applying permanent bonuses)
         for (int i = 0; i < Player.REGULAR_GEM_TYPES; i++) {
             int effectiveCost = Math.max(0, card.getCost()[i] - player.getBonuses()[i]);
+            // Check if player coins cover effective cost; if not, gold must make up the
+            // difference
             int shortfall = Math.max(0, effectiveCost - player.getCoins()[i]);
             goldNeeded += shortfall;
         }
+
+        // Check if player has enough gold to cover all color shortfalls
         return goldNeeded <= player.getCoins()[GemColor.GOLD.ordinal()];
     }
 }

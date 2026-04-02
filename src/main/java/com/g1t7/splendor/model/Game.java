@@ -68,7 +68,7 @@ public class Game {
      */
     public Player getWinner() {
         return players.stream()
-                .filter(p -> !p.isEjected()) // <-- ADD THIS LINE to disqualify ejected players
+                .filter(p -> !p.isEjected())
                 .max(Comparator.comparingInt(Player::getScore)
                         .thenComparing(Comparator.comparingInt((Player p) -> p.getCards().size()).reversed()))
                 .orElse(players.get(0));
