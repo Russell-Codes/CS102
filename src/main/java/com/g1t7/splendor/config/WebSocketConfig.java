@@ -35,6 +35,6 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/splendor-websocket")
                 .setAllowedOriginPatterns("*")
-                .withSockJS();
+                .withSockJS(); // fallback for browsers without native WebSocket support
     }
 }

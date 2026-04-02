@@ -32,6 +32,7 @@ public class GameEngineService {
         initBoard(game);
         initNobles(game, numPlayers);
 
+        // If first player is AI, trigger AI to play first turn
         Player firstPlayer = game.getPlayers().get(0);
         if (firstPlayer.isAi()) {
             boolean acted = aiPlayer.takeTurn(game, firstPlayer);
@@ -47,6 +48,8 @@ public class GameEngineService {
     private void initBank(Game game, int numPlayers) {
         int gemCount = game.getConfig().getGemCount(numPlayers);
         int goldCount = game.getConfig().getGoldCoins();
+        // Set bank array: 5 regular gem colors + 1 gold. Order: R,G,B,W,B,G where
+        // G=GOLD
         game.setBankCoins(new int[] { gemCount, gemCount, gemCount, gemCount, gemCount, goldCount });
     }
 
@@ -54,7 +57,9 @@ public class GameEngineService {
      * Loads, splits, and shuffles card decks by tier.
      */
     private void initDecks(Game game) {
+        // Load all cards from config CSV file
         List<Card> allCards = CardData.buildDeck(game.getConfig().getCardFile());
+        // Distribute cards into tier-specific decks by card tier property
         for (Card c : allCards) {
             if (c.getTier() == 1)
                 game.getTier1Deck().add(c);
@@ -63,6 +68,7 @@ public class GameEngineService {
             else
                 game.getTier3Deck().add(c);
         }
+        // Shuffle each deck to randomize draw order
         Collections.shuffle(game.getTier1Deck());
         Collections.shuffle(game.getTier2Deck());
         Collections.shuffle(game.getTier3Deck());
@@ -87,8 +93,11 @@ public class GameEngineService {
      * Selects and activates nobles for the current game.
      */
     private void initNobles(Game game, int numPlayers) {
+        // Fetch noble count from config (varies by player count)
         int nobleCount = game.getConfig().getNobleCount(numPlayers);
         List<Noble> allNobles = NobleData.buildNobles(game.getConfig().getNobleFile());
+
+        // Shuffle to randomize noble selection
         Collections.shuffle(allNobles);
         game.setActiveNobles(new ArrayList<>(allNobles.subList(0, Math.min(nobleCount, allNobles.size()))));
     }
@@ -98,6 +107,7 @@ public class GameEngineService {
      */
     private void dealSlot(Game game, int slot) {
         List<Card> deck = deckForSlot(game, slot);
+        // If deck is not empty, draw top card and place in slot
         if (!deck.isEmpty()) {
             game.getVisibleCards().set(slot, deck.remove(deck.size() - 1));
         }
@@ -107,10 +117,13 @@ public class GameEngineService {
      * Resolves which tier deck corresponds to a visible board slot.
      */
     private List<Card> deckForSlot(Game game, int slot) {
+        // Slots 0-3: Tier 1
         if (slot < Game.VISIBLE_CARDS_PER_TIER)
             return game.getTier1Deck();
+        // Slots 4-7: Tier 2
         if (slot < Game.VISIBLE_CARDS_PER_TIER * 2)
             return game.getTier2Deck();
+        // Slots 8-11: Tier 3
         return game.getTier3Deck();
     }
 
@@ -119,9 +132,11 @@ public class GameEngineService {
      */
     public void replenishCard(Game game, int slotIndex) {
         List<Card> deck = deckForSlot(game, slotIndex);
+        // If deck has cards, draw top card and place in slot
         if (!deck.isEmpty()) {
             game.getVisibleCards().set(slotIndex, deck.remove(deck.size() - 1));
         } else {
+            // If deck is empty, leave slot empty
             game.getVisibleCards().set(slotIndex, null);
         }
     }
@@ -130,14 +145,18 @@ public class GameEngineService {
      * Moves to the next active player and handles endgame checks.
      */
     public void changeTurns(Game game) {
+        // Refill any empty board slots from decks
         autoReplenishBoard(game);
+        // Reset turn timer and clear any lingering messages
         game.setLastActivityTime(System.currentTimeMillis());
         game.setMessage("");
 
+        // Check if current player has reached winning score; activate final-round mode
         if (!game.isFinalRound() && game.getCurrentPlayer().getScore() >= game.getConfig().getWinScore()) {
             game.setFinalRound(true);
         }
 
+        // Advance to next player, skipping any ejected players
         int nextTurn = game.getCurrentTurnIndex();
         int attempts = 0;
         do {
@@ -151,8 +170,10 @@ public class GameEngineService {
             return;
         }
 
+        // Set the new current player
         game.setCurrentTurnIndex(nextTurn);
 
+        // If the new player is AI, execute the AI's turn
         Player next = game.getCurrentPlayer();
         if (next.isAi() && !game.isGameOver()) {
             boolean acted = aiPlayer.takeTurn(game, next);
@@ -176,6 +197,7 @@ public class GameEngineService {
                 player.setAi(true);
                 player.setName(player.getName() + " (CPU Replaced)");
 
+                // If the replaced player is the current turn player, handle incomplete actions
                 if (game.getCurrentPlayer() == player) {
                     if (game.isPendingNobleChoice()) {
                         // 1. If waiting for a Noble, auto-claim the first available one for the AI
@@ -243,17 +265,21 @@ public class GameEngineService {
                         game.getTier3Deck().add(0, c);
                 }
                 player.getReservedCards().clear();
+                // Mark player as ejected and update name
                 player.setEjected(true);
                 player.setName(player.getName() + " (EJECTED)");
 
                 // Check how many players are left
                 long activePlayers = game.getPlayers().stream().filter(p -> !p.isEjected()).count();
 
+                // End game if only 1 or fewer players remain
                 if (activePlayers <= 1) {
                     game.setGameOver(true);
                     return true;
                 }
 
+                // If ejected player is current turn player, clear pending states and advance
+                // turns
                 if (game.getCurrentPlayer() == player) {
                     game.setPendingDiscard(false);
                     game.setPendingNobleChoice(false);
@@ -272,6 +298,7 @@ public class GameEngineService {
      */
     private void autoReplenishBoard(Game game) {
         for (int i = 0; i < Game.TOTAL_VISIBLE_CARDS; i++) {
+            // If slot is empty (null), replenish from appropriate tier deck
             if (game.getVisibleCards().get(i) == null) {
                 replenishCard(game, i);
             }

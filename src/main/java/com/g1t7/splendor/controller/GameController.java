@@ -36,12 +36,15 @@ public class GameController {
      */
     @GetMapping
     public String showGame(@PathVariable String roomId, Model model, HttpSession session) {
+        // Check if room exists and game has started; redirect home if not ready
         Game game = gameManager.getGame(roomId);
         if (game == null || !game.isStarted())
             return "redirect:/";
+        // Verify game is still in progress; redirect to gameover page if finished
         if (game.isGameOver())
             return "redirect:/gameover/" + roomId;
 
+        // Load game state and player session info into template model
         model.addAttribute("game", game);
         model.addAttribute("roomId", roomId);
         model.addAttribute("myUuid", session.getAttribute("userUuid"));
@@ -54,9 +57,11 @@ public class GameController {
     @PostMapping("/ping")
     @ResponseBody
     public String handlePing(@PathVariable String roomId, HttpSession session) {
+        // Locate the game and the requesting player by UUID
         Game game = gameManager.getGame(roomId);
         String myUuid = (String) session.getAttribute("userUuid");
         if (game != null && myUuid != null) {
+            // Update the player's heartbeat timestamp to track active connection
             for (Player player : game.getPlayers()) {
                 if (myUuid.equals(player.getUuid())) {
                     player.setLastHeartbeat(System.currentTimeMillis());
@@ -72,10 +77,12 @@ public class GameController {
      */
     @PostMapping("/host-action/ai")
     public String replaceWithAi(@PathVariable String roomId, @RequestParam String targetUuid, HttpSession session) {
+        // Verify sender is host and handle player->AI conversion if successful
         String sessionUuid = (String) session.getAttribute("userUuid");
         Game game = gameManager.getGame(roomId);
 
         if (game != null && gameEngineService.replacePlayerWithAi(game, sessionUuid, targetUuid)) {
+            // Broadcast refresh to all connected clients to reflect the change
             refreshRoom(roomId);
         }
         return "redirect:/game/" + roomId;
@@ -106,9 +113,12 @@ public class GameController {
             @RequestParam(defaultValue = "0") int red,
             @RequestParam(defaultValue = "0") int black,
             HttpSession session) {
+        // Assemble per-color counts into array for game rules enforcement
         String userUuid = (String) session.getAttribute("userUuid");
         int[] counts = { white, blue, green, red, black };
 
+        // Attempt coin take with state machine transitions (discard pending or turn
+        // advance)
         if (gamePlayService.takeCoins(roomId, userUuid, counts)) {
             refreshRoom(roomId);
         }
@@ -173,6 +183,8 @@ public class GameController {
      * Pushes a refresh event to everyone in the room.
      */
     private void refreshRoom(String roomId) {
+        // Send broadcast WebSocket event to all clients in room for state
+        // synchronization
         messagingTemplate.convertAndSend("/topic/room/" + roomId, "REFRESH");
     }
 
@@ -181,6 +193,7 @@ public class GameController {
      */
     @PostMapping("/reserve-deck")
     public String reserveFromDeck(@PathVariable String roomId, @RequestParam("tier") int tier, HttpSession session) {
+        // Draw blind card from specified tier deck and add to player's reserves
         String userUuid = (String) session.getAttribute("userUuid");
 
         if (gamePlayService.reserveFromDeck(roomId, userUuid, tier)) {
