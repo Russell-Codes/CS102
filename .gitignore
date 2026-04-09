@@ -39,3 +39,6 @@ src/main/frontend/node/
 src/main/frontend/node_modules
 src/main/frontend/package-lock.json
 src/main/resources/static/css/main.css
+
+
+.DS_Store
